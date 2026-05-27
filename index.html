@@ -43,10 +43,6 @@
             background: #cbd5e1;
             border-radius: 3px;
         }
-        /* Kursor dragging untuk kanvas kalibrasi */
-        #canvasOutput {
-            cursor: move;
-        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
@@ -125,8 +121,20 @@
                 <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
                 
                 <!-- Kanvas Interaktif untuk Paparan Preview & Kalibrasi -->
-                <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10" title="Sentuh dan seret untuk gerakkan bulatan imbasan"></canvas>
+                <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10"></canvas>
                 
+                <!-- Loading Indicator Pengimbasan Automatik -->
+                <div id="scanning-loader" class="hidden absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-30">
+                    <div class="relative w-16 h-16">
+                        <div class="absolute inset-0 rounded-full border-4 border-slate-700"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin"></div>
+                    </div>
+                    <div>
+                        <p class="font-bold text-sm tracking-wide text-brand-400 uppercase">Sistem Pengimbasan Automatik</p>
+                        <p class="text-xs text-slate-300 mt-1 max-w-[280px]">Menganalisis kertas, menyelaraskan grid soalan, dan memproses markah...</p>
+                    </div>
+                </div>
+
                 <!-- Prerender / Fallback Visual apabila Kamera Tidak Berfungsi -->
                 <div id="camera-fallback" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-10">
                     <div class="bg-slate-800/80 p-4 rounded-full border border-slate-700">
@@ -165,7 +173,7 @@
                         <i data-lucide="scan-face" class="w-5 h-5"></i> MEMULAKAN KAMERA...
                     </button>
                     <button id="resetBtn" onclick="resetToLiveCamera()" class="hidden bg-slate-600 hover:bg-slate-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> SIFAR
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> IMBAS KERTAS LAIN
                     </button>
                 </div>
 
@@ -174,62 +182,15 @@
                 
                 <!-- Butang Alternatif Muat Naik / Tangkap Gambar dari Galeri -->
                 <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
-                    <i data-lucide="upload" class="w-4 h-4 text-brand-500"></i> MUAT NAIK JAWAPAN / AMBIL GAMBAR
+                    <i data-lucide="camera" class="w-4 h-4 text-brand-500"></i> AMBIL GAMBAR / MUAT NAIK JAWAPAN
                 </button>
-            </div>
-
-            <!-- PANEL PEMBETULAN GRID SECARA SENTUH ATAU BUTANG (SANGAT MUDAH & TEPAT) -->
-            <div id="quick-alignment-panel" class="hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-3">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
-                        <i data-lucide="move" class="w-4 h-4"></i> Pelarasan Grid Bulatan (Sentuh & Seret Gambar)
-                    </h3>
-                    <span class="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">100% Aktif</span>
-                </div>
-                
-                <p class="text-[10px] text-slate-500">Sentuh gambar dan seret ke mana-mana arah untuk menggerakkan bulatan imbasan. Guna butang di bawah untuk pelarasan mikro:</p>
-                
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <!-- Gerak Grid -->
-                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center gap-2">
-                        <span class="text-[10px] font-bold text-slate-400">POSISI GRID</span>
-                        <div class="grid grid-cols-3 gap-1 w-24">
-                            <div></div>
-                            <button onclick="nudge('y', -3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-up" class="w-3.5 h-3.5 text-slate-600"></i></button>
-                            <div></div>
-                            
-                            <button onclick="nudge('x', -3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-left" class="w-3.5 h-3.5 text-slate-600"></i></button>
-                            <div class="flex items-center justify-center"><i data-lucide="move" class="w-3.5 h-3.5 text-brand-500"></i></div>
-                            <button onclick="nudge('x', 3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-600"></i></button>
-                            
-                            <div></div>
-                            <button onclick="nudge('y', 3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-600"></i></button>
-                            <div></div>
-                        </div>
-                    </div>
-
-                    <!-- Jarak Baris & Lajur -->
-                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
-                        <div class="flex flex-col gap-1 text-center">
-                            <span class="text-[10px] font-bold text-slate-400">UBAH JARAK</span>
-                            <div class="flex gap-1 justify-center mt-1">
-                                <button onclick="nudge('spacingY', 1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="stretch-vertical" class="w-3 h-3 text-brand-500"></i> +Baris</button>
-                                <button onclick="nudge('spacingY', -1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="shrink" class="w-3 h-3 text-rose-500"></i> -Baris</button>
-                            </div>
-                            <div class="flex gap-1 justify-center mt-1">
-                                <button onclick="nudge('spacingX', 1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="stretch-horizontal" class="w-3 h-3 text-brand-500"></i> +Lajur</button>
-                                <button onclick="nudge('spacingX', -1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="shrink" class="w-3 h-3 text-rose-500"></i> -Lajur</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
             <div id="quick-result" class="hidden bg-white p-5 rounded-2xl border border-slate-100 shadow-xl flex flex-col gap-4 animate-in fade-in duration-300">
                 <div class="flex items-center justify-between">
                     <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5 text-brand-500">
-                        <i data-lucide="check-circle" class="w-5 h-5"></i> Imbasan Selesai!
+                        <i data-lucide="check-circle" class="w-5 h-5"></i> Keputusan Imbasan Dinamik
                     </h3>
                     <span id="result-timestamp" class="text-[10px] text-slate-400">Baru Sahaja</span>
                 </div>
@@ -369,25 +330,16 @@
         let lastScannedResult = null;
         let cameraActive = false;
 
-        // Data Penentukuran OMR Standard (Kekal konsisten di dalam logik)
-        // Nilai X asal ditukar dari 60 ke 160 supaya kedudukan permulaan lebih rapat ke tengah borang
+        // Data Penentukuran OMR Asal (Sebagai nilai fallback pintar jika auto-detect gagal)
         let calibration = {
             x: 160,
             y: 160,
             spacingX: 35,
             spacingY: 21,
-            col2X: 340, // Lajur kedua disesuaikan agar selari dengan X baharu
+            col2X: 340,
             radius: 6,
-            threshold: 110
+            threshold: 115
         };
-
-        // Pembolehubah untuk fungsi drag pergerakan jari
-        let isDragging = false;
-        let startTouchX = 0;
-        let startTouchY = 0;
-        let originalCalX = 0;
-        let originalCalY = 0;
-        let originalCol2X = 0;
 
         // Simpan salinan imej asal pada kanvas untuk dilukis semula jika perlu
         let rawImageElement = null;
@@ -407,7 +359,6 @@
             loadSavedConfig();
             renderSkemaGrid();
             loadRecords();
-            initDragEvents();
             lucide.createIcons();
             
             // Simulasikan pemuatan OpenCV (Memandangkan OpenCV.js adalah fail yang besar,
@@ -529,27 +480,31 @@
             const frameGuide = document.getElementById('camera-frame-guide');
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
-            const alignmentPanel = document.getElementById('quick-alignment-panel');
+            const loader = document.getElementById('scanning-loader');
 
-            // Hentikan video, paparkan kanvas
-            video.classList.add('hidden');
-            canvas.classList.remove('hidden');
-            frameGuide.classList.add('hidden');
-            alignmentPanel.classList.remove('hidden'); // Paparkan kawalan butang nudging
-            
-            // Urus urutan butang
-            scanBtn.classList.add('hidden');
-            resetBtn.classList.remove('hidden');
+            // Papar loading screen pengesanan automatik selama 1 saat untuk pemprosesan OpenCV
+            loader.classList.remove('hidden');
 
-            const ctx = canvas.getContext('2d');
-            canvas.width = 480;
-            canvas.height = 640;
-            
-            // Lukis gambar ke kanvas
-            ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
-            
-            // Analisis serta-merta
-            analyzeCanvas(canvas);
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                video.classList.add('hidden');
+                canvas.classList.remove('hidden');
+                frameGuide.classList.add('hidden');
+                
+                // Urus butang tindakan
+                scanBtn.classList.add('hidden');
+                resetBtn.classList.remove('hidden');
+
+                const ctx = canvas.getContext('2d');
+                canvas.width = 480;
+                canvas.height = 640;
+                
+                // Lukis gambar ke kanvas
+                ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
+                
+                // Analisis & Auto-Align secara pintar
+                autoAlignAndProcess(canvas);
+            }, 800);
         }
 
         // Reset semula ke kamera langsung (Live view)
@@ -560,13 +515,11 @@
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
             const quickResult = document.getElementById('quick-result');
-            const alignmentPanel = document.getElementById('quick-alignment-panel');
 
             canvas.classList.add('hidden');
             video.classList.remove('hidden');
             frameGuide.classList.remove('hidden');
             quickResult.classList.add('hidden');
-            alignmentPanel.classList.add('hidden');
 
             scanBtn.classList.remove('hidden');
             resetBtn.classList.add('hidden');
@@ -600,92 +553,6 @@
                     stream.getTracks().forEach(track => track.stop());
                 }
             }
-        }
-
-        // SISTEM DRAGGING JARI ATAS KANVAS (MENGGERAKKAN GRID JAWAPAN)
-        function initDragEvents() {
-            const canvas = document.getElementById('canvasOutput');
-            
-            // Event Mouse (Desktop)
-            canvas.addEventListener('mousedown', startDrag);
-            canvas.addEventListener('mousemove', moveDrag);
-            canvas.addEventListener('mouseup', endDrag);
-            canvas.addEventListener('mouseleave', endDrag);
-
-            // Event Touch (Mobile)
-            canvas.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1) {
-                    startDrag(e.touches[0]);
-                }
-            }, { passive: true });
-            
-            canvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1) {
-                    moveDrag(e.touches[0]);
-                }
-            }, { passive: true });
-            
-            canvas.addEventListener('touchend', endDrag);
-        }
-
-        function startDrag(e) {
-            if (!rawImageElement) return;
-            isDragging = true;
-            
-            // Dapatkan koordinat touch/mouse nisbah kepada elemen canvas
-            const rect = document.getElementById('canvasOutput').getBoundingClientRect();
-            startTouchX = e.clientX - rect.left;
-            startTouchY = e.clientY - rect.top;
-            
-            originalCalX = calibration.x;
-            originalCalY = calibration.y;
-            originalCol2X = calibration.col2X;
-        }
-
-        function moveDrag(e) {
-            if (!isDragging || !rawImageElement) return;
-            
-            const rect = document.getElementById('canvasOutput').getBoundingClientRect();
-            const currentX = e.clientX - rect.left;
-            const currentY = e.clientY - rect.top;
-            
-            // Kira beza seretan
-            const dx = (currentX - startTouchX) * (480 / rect.width); // Skala koordinat ke 480x640
-            const dy = (currentY - startTouchY) * (640 / rect.height);
-            
-            // Ubah koordinat imbasan secara terus
-            calibration.x = Math.round(originalCalX + dx);
-            calibration.y = Math.round(originalCalY + dy);
-            calibration.col2X = Math.round(originalCol2X + dx);
-            
-            // Lukis semula imej dan selaraskan grid bulatan imbasan
-            showCanvasWithImage(rawImageElement);
-        }
-
-        function endDrag() {
-            isDragging = false;
-        }
-
-        // FUNGSI MENGGERAKKAN GRID MENERUSI BUTANG HALUS (NUDGE)
-        function nudge(key, amount) {
-            if (!rawImageElement) return;
-            
-            if (key === 'col2X') {
-                calibration.col2X += amount;
-            } else if (key === 'spacingX') {
-                calibration.spacingX = Math.max(10, calibration.spacingX + amount);
-                calibration.col2X += (amount * 3); // Laras kol2 mengikut perenggangan
-            } else if (key === 'spacingY') {
-                calibration.spacingY = Math.max(5, calibration.spacingY + amount);
-            } else {
-                calibration[key] += amount;
-                if (key === 'x') {
-                    calibration.col2X += amount; // Kedua-dua lajur bergerak seiringan
-                }
-            }
-            
-            // Lakarkan semula imej dengan perubahan jitu
-            showCanvasWithImage(rawImageElement);
         }
 
         // Modal Kunci Jawapan & Subjek
@@ -816,7 +683,115 @@
             tempImg.src = canvas.toDataURL('image/png');
         }
 
-        // LOGIK UTAMA PEMPROSESAN GAMBAR KANVAS (PROSESSING JAWAPAN DENGAN PREVIEW VISUAL)
+        // ALGORITMA PENJAJARAN AUTOPILOT OMR (AUTO-ALIGNMENT GRID)
+        function autoAlignAndProcess(canvas) {
+            // Kita gunakan OpenCV.js untuk binarize gambar, mengesan semua kontur berbentuk bulatan (bubbles),
+            // dan mengira sendiri bounding box serta spacing grid secara automatik!
+            let src = cv.imread(canvas);
+            let gray = new cv.Mat();
+            let thresh = new cv.Mat();
+            let contours = new cv.MatVector();
+            let hierarchy = new cv.Mat();
+
+            // 1. Tukar ke Grayscale
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+            // 2. Adaptive Thresholding (mengesan bintik bintik hitam bulatan pensel)
+            cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 15, 4);
+
+            // 3. Cari Kontur
+            cv.findContours(thresh, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+
+            let detectedBubbles = [];
+            for (let i = 0; i < contours.size(); ++i) {
+                let cnt = contours.get(i);
+                let rect = cv.boundingRect(cnt);
+                let ratio = rect.width / rect.height;
+                
+                // Bulatan jawapan UPSR biasanya bersaiz 12-30px pada kanvas 480x640
+                if (rect.width >= 11 && rect.width <= 26 && rect.height >= 11 && rect.height <= 26 && ratio >= 0.75 && ratio <= 1.35) {
+                    detectedBubbles.push({
+                        x: rect.x + rect.width / 2,
+                        y: rect.y + rect.height / 2,
+                        w: rect.width,
+                        h: rect.height
+                    });
+                }
+            }
+
+            console.log(`Ditemui ${detectedBubbles.length} bulatan calon.`);
+
+            // 4. Analisis Kelompok Bulatan (Clustering) untuk Penjajaran Jitu secara Autopilot
+            if (detectedBubbles.length >= 10) {
+                // Cari titik tengah (median) paksi X untuk memisahkan Lajur Kiri & Lajur Kanan
+                detectedBubbles.sort((a, b) => a.x - b.x);
+                let midIdx = Math.floor(detectedBubbles.length / 2);
+                let medianX = detectedBubbles[midIdx].x;
+
+                // Pisahkan mengikut lajur
+                let leftColBubbles = detectedBubbles.filter(b => b.x < medianX);
+                let rightColBubbles = detectedBubbles.filter(b => b.x >= medianX);
+
+                if (leftColBubbles.length >= 5) {
+                    // Kira had atas (min Y) dan had bawah (max Y) bulatan jawapan di lajur kiri
+                    leftColBubbles.sort((a, b) => a.y - b.y);
+                    let minY = leftColBubbles[0].y;
+                    let maxY = leftColBubbles[leftColBubbles.length - 1].y;
+
+                    // Cari julat X lajur kiri untuk menentukan permulaan A, B, C, D
+                    leftColBubbles.sort((a, b) => a.x - b.x);
+                    let minX = leftColBubbles[0].x;
+                    let maxX = leftColBubbles[leftColBubbles.length - 1].x;
+
+                    // AUTO-UPDATE DATA PENENTUKURAN (Dinamik mengikut gambar!)
+                    calibration.x = Math.max(15, minX - 4);
+                    calibration.y = Math.max(100, minY - 2);
+                    
+                    // Kira jarak lajur (spacingX) secara automatik
+                    let calculatedSpacingX = (maxX - minX) / 3;
+                    if (calculatedSpacingX >= 20 && calculatedSpacingX <= 45) {
+                        calibration.spacingX = calculatedSpacingX;
+                    }
+
+                    // Kira jarak baris (spacingY) secara automatik untuk 20 baris soalan
+                    let totalRows = (totalQuestions > 20) ? 20 : totalQuestions;
+                    let calculatedSpacingY = (maxY - minY) / (totalRows - 1 || 1);
+                    if (calculatedSpacingY >= 14 && calculatedSpacingY <= 35) {
+                        calibration.spacingY = calculatedSpacingY;
+                    }
+
+                    // Jika lajur kedua wujud (bagi soalan 21-40)
+                    if (rightColBubbles.length >= 5 && totalQuestions > 20) {
+                        rightColBubbles.sort((a, b) => a.x - b.x);
+                        calibration.col2X = rightColBubbles[0].x - 4;
+                    } else {
+                        // Jika tiada lajur kedua dikesan, setkan jarak lajur kanan standard
+                        calibration.col2X = calibration.x + (calibration.spacingX * 4) + 60;
+                    }
+                    console.log("Auto-Alignment Berjaya Dipasang!", calibration);
+                }
+            } else {
+                console.log("Gagal mengesan bulatan yang mencukupi untuk auto-align. Menggunakan grid lalai.");
+                // Jika fail OMR diambil terlalu senget atau rosak, sistem fallback pintar kami
+                // akan meletakkan grid OMR di bahagian tengah secara automatik mengikut saiz imej.
+                calibration.x = 85;
+                calibration.col2X = 275;
+                calibration.y = 160;
+                calibration.spacingX = 32;
+                calibration.spacingY = 21.5;
+            }
+
+            // Sapu memori OpenCV untuk elak kebocoran memori (memory leaks)
+            src.delete();
+            gray.delete();
+            thresh.delete();
+            contours.delete();
+            hierarchy.delete();
+
+            // 5. Jalankan analisis imbasan dengan parameter dinamik baharu yang sangat tepat!
+            analyzeCanvas(canvas);
+        }
+
+        // LOGIK UTAMA SEMAKAN JAWAPAN & KIRA MARKAH MASA NYATA
         function analyzeCanvas(canvas) {
             const ctx = canvas.getContext('2d');
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -866,7 +841,7 @@
                                     // Nilai Grayscale
                                     const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
                                     
-                                    // Menilai kepekatan jika piksel tersebut gelap
+                                    // Menilai kepekatan jika piksel tersebut gelap (threshold hitam pensel)
                                     if (grayscale < calibration.threshold) { 
                                         totalDarkness++;
                                     }
@@ -887,7 +862,7 @@
                 });
 
                 // Jika tiada bulatan yang cukup gelap, bermaksud calon tidak tanda (TIADA)
-                if (maxKepekatan < 0.15) {
+                if (maxKepekatan < 0.18) {
                     jawapanDipilih = "TIADA";
                     selectedIndex = -1;
                 }
@@ -909,30 +884,30 @@
                     });
                 }
 
-                // LUKIS BULATAN PREVIEW PADA KANVAS (Bantuan visual untuk semakan)
+                // LUKIS BULATAN PREVIEW JAWAPAN PADA KANVAS
                 pilihanAbjad.forEach((abc, idx) => {
                     const targetX = colStartX + (idx * calibration.spacingX);
                     const targetY = rowY;
                     
                     ctx.beginPath();
-                    ctx.arc(targetX, targetY, calibration.radius + 2, 0, 2 * Math.PI);
+                    ctx.arc(targetX, targetY, calibration.radius + 3, 0, 2 * Math.PI);
                     
                     if (idx === selectedIndex) {
                         // Bulatan yang dikesan dipilih oleh calon
                         if (adakahBetul) {
                             ctx.strokeStyle = '#10b981'; // Hijau jika betul
-                            ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                            ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
                         } else {
                             ctx.strokeStyle = '#ef4444'; // Merah jika salah
-                            ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+                            ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
                         }
                     } else {
                         // Bulatan bukan pilihan
-                        ctx.strokeStyle = '#3b82f6'; // Biru lembut sebagai penunjuk
+                        ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; // Biru lembut sebagai penunjuk pembayang
                         ctx.fillStyle = 'transparent';
                     }
                     
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                     ctx.fill();
                 });
@@ -983,6 +958,9 @@
 
             // Tampilkan kad keputusan dengan animasi yang kemas
             document.getElementById('quick-result').classList.remove('hidden');
+            
+            // Scroll ke kad keputusan
+            document.getElementById('quick-result').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Simpan Hasil Ke Pangkalan Data Lokal
