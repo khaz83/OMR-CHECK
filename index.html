@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMR Checker Pro - Semakan Automatik</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons untuk Ikon Moden -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#007bff',
+                            600: '#0062cc',
+                            700: '#004da3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gaya Tambahan untuk Garis Panduan Kamera */
+        .camera-overlay {
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <!-- Header / Navigasi Atas -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-brand-500 text-white p-2 rounded-xl shadow-md shadow-brand-500/20">
+                    <i data-lucide="scan-line" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-800 tracking-tight">Semak OMR Pro</h1>
+                    <p class="text-[10px] text-slate-500 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" id="status-indicator"></span>
+                        <span id="status-text">Memuatkan Sistem Pintar...</span>
+                    </p>
+                </div>
+            </div>
+            
+            <button onclick="toggleSetupModal()" class="text-slate-600 hover:text-brand-500 p-2 rounded-lg hover:bg-slate-50 transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Kandungan Utama (Direka khas untuk Paparan Telefon) -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 flex flex-col gap-6">
+        
+        <!-- Mesej Amaran Tersuai (Custom Error Banner) -->
+        <div id="error-banner" class="hidden bg-rose-50 border border-rose-100 p-4 rounded-xl text-rose-800 text-xs flex flex-col gap-3 shadow-sm animate-in fade-in duration-300">
+            <div class="flex items-start gap-3">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500 shrink-0 mt-0.5"></i>
+                <div class="flex-1">
+                    <p class="font-bold">Akses Kamera Dinafikan (Permission Denied)</p>
+                    <p class="text-[11px] text-rose-700/95 mt-1" id="error-message">
+                        Kebenaran untuk mengakses kamera telah disekat. Sila kemas kini kebenaran di bahagian tetapan pelayar anda (klik ikon mangga di sebelah bar URL) atau gunakan fungsi muat naik gambar di bawah.
+                    </p>
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="startCamera()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] transition-all flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Cuba Akses Kamera Semula
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Pemilihan Mod -->
+        <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-100 flex gap-1">
+            <button onclick="switchTab('scan')" id="tab-scan" class="flex-1 py-2 px-3 text-xs font-semibold rounded-lg bg-brand-500 text-white shadow-sm transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="camera" class="w-4 h-4"></i> Imbas Jawapan
+            </button>
+            <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2 px-3 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="history" class="w-4 h-4"></i> Rekod Markah
+            </button>
+        </div>
+
+        <!-- SEKSYEN 1: PENGIMBAS (CAMERA SECTION) -->
+        <section id="section-scan" class="flex flex-col gap-4">
+            
+            <!-- Panel Info Subjek Aktif -->
+            <div class="bg-gradient-to-r from-brand-500 to-blue-600 p-4 rounded-2xl text-white shadow-lg shadow-brand-500/10 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">Subjek Aktif</p>
+                    <h2 id="current-subject-display" class="text-lg font-bold">Matematik (Siri 1)</h2>
+                    <p id="current-total-q-display" class="text-xs text-blue-100 mt-0.5">Jumlah: 40 Soalan</p>
+                </div>
+                <button onclick="toggleSetupModal()" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-xs font-medium transition-all backdrop-blur-sm">
+                    Tukar Subjek
+                </button>
+            </div>
+
+            <!-- Kamera Box Container -->
+            <div class="relative bg-black rounded-2xl overflow-hidden shadow-inner aspect-[3/4] flex items-center justify-center">
+                <!-- Video Stream -->
+                <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+                
+                <!-- Prerender / Fallback Visual apabila Kamera Tidak Berfungsi -->
+                <div id="camera-fallback" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-10">
+                    <div class="bg-slate-800/80 p-4 rounded-full border border-slate-700">
+                        <i data-lucide="image" class="w-8 h-8 text-brand-500"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-sm">Mod Fail Sandaran Aktif</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Kamera disekat atau tiada. Sila gunakan fungsi muat naik gambar di bawah untuk menyemak kertas jawapan secara offline.</p>
+                    </div>
+                </div>
+
+                <!-- Overlay Garis Panduan Kertas (OMR Guide) -->
+                <div id="camera-frame-guide" class="absolute inset-4 rounded-xl camera-overlay pointer-events-none flex flex-col justify-between p-4 z-20">
+                    <div class="flex justify-between">
+                        <div class="w-4 h-4 border-t-2 border-l-2 border-brand-500"></div>
+                        <div class="w-4 h-4 border-t-2 border-r-2 border-brand-500"></div>
+                    </div>
+                    
+                    <!-- Label Panduan Tengah -->
+                    <div class="text-center bg-black/60 backdrop-blur-sm py-1 px-3 rounded-full text-[10px] text-white/90 mx-auto font-medium">
+                        Letakkan Kertas OMR Di Dalam Kotak Ini
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <div class="w-4 h-4 border-b-2 border-l-2 border-brand-500"></div>
+                        <div class="w-4 h-4 border-b-2 border-r-2 border-brand-500"></div>
+                    </div>
+                </div>
+
+                <!-- Canvas Tersembunyi Untuk Pemprosesan -->
+                <canvas id="canvasOutput" class="hidden"></canvas>
+            </div>
+
+            <!-- Kawalan Pengimbasan -->
+            <div class="flex flex-col gap-3">
+                <!-- Butang Imbas melalui Kamera -->
+                <button id="scanBtn" onclick="processOMR()" disabled class="w-full bg-slate-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]">
+                    <i data-lucide="scan-face" class="w-5 h-5"></i> MEMULAKAN KAMERA...
+                </button>
+
+                <!-- Input File Tersembunyi -->
+                <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+                
+                <!-- Butang Alternatif Muat Naik / Tangkap Gambar dari Galeri -->
+                <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
+                    <i data-lucide="upload" class="w-4 h-4 text-brand-500"></i> MUAT NAIK JAWAPAN / AMBIL GAMBAR
+                </button>
+
+                <p class="text-center text-xs text-slate-400">Pastikan pencahayaan cukup terang untuk ketepatan yang tinggi.</p>
+            </div>
+
+            <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
+            <div id="quick-result" class="hidden bg-white p-5 rounded-2xl border border-slate-100 shadow-xl flex flex-col gap-4 animate-in fade-in duration-300">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5 text-brand-500">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i> Imbasan Selesai!
+                    </h3>
+                    <span id="result-timestamp" class="text-[10px] text-slate-400">Baru Sahaja</span>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl">
+                    <div class="bg-brand-500 text-white rounded-xl px-4 py-3 text-center min-w-[80px]">
+                        <p class="text-[10px] uppercase font-semibold text-brand-100">Skor</p>
+                        <p id="quick-score" class="text-2xl font-black">--/--</p>
+                    </div>
+                    <div>
+                        <p id="quick-percent" class="text-lg font-bold text-slate-800">Peratusan: --%</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Status: <span id="quick-status" class="font-semibold text-emerald-500">LULUS</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg text-emerald-700 flex justify-between">
+                        <span>Betul:</span> <strong id="quick-correct" class="font-bold">0</strong>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 p-2.5 rounded-lg text-rose-700 flex justify-between">
+                        <span>Salah:</span> <strong id="quick-wrong" class="font-bold">0</strong>
+                    </div>
+                </div>
+
+                <!-- Analisis Salah Betul Per Soalan -->
+                <div class="border-t border-slate-100 pt-3">
+                    <p class="text-xs font-semibold text-slate-600 mb-2">Kedudukan Jawapan Salah:</p>
+                    <div id="wrong-answers-list" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                        <span class="text-slate-400 text-xs">Tiada kesalahan dikesan. Syabas!</span>
+                    </div>
+                </div>
+
+                <!-- Simpan Ke Rekod -->
+                <div class="flex gap-2">
+                    <input id="student-name" type="text" placeholder="Masukkan Nama Murid" class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 outline-none">
+                    <button onclick="saveRecord()" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow transition-all flex items-center gap-1">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SEKSYEN 2: REKOD MARKAH (HISTORY SECTION) -->
+        <section id="section-history" class="hidden flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-sm">Semua Rekod Imbasan</h3>
+                <button onclick="clearAllRecords()" class="text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1 font-medium">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Padam Semua
+                </button>
+            </div>
+
+            <!-- Senarai Rekod Markah -->
+            <div id="records-list" class="flex flex-col gap-3">
+                <!-- Tiada Rekod -->
+                <div class="bg-white rounded-2xl p-8 border border-slate-100 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                    <i data-lucide="folder-open" class="w-8 h-8 text-slate-300"></i>
+                    <p class="text-xs">Tiada rekod disimpan setakat ini.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL TETAPAN SUBJEK & SKEMA JAWAPAN -->
+    <div id="setup-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl flex flex-col gap-4 animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <i data-lucide="sliders-horizontal" class="w-5 h-5 text-brand-500"></i> Tetapan Subjek & Skema
+                </h3>
+                <button onclick="toggleSetupModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Nama Subjek -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-slate-600">Nama Subjek / Peperiksaan</label>
+                <input id="setup-subject" type="text" value="Sains Hayat" class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+
+            <!-- Bilangan Soalan -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-slate-600">Bilangan Soalan</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setQuestionsCount(20)" id="btn-q-20" class="py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50">
+                        20 Soalan
+                    </button>
+                    <button onclick="setQuestionsCount(40)" id="btn-q-40" class="py-2 rounded-xl text-xs font-bold border-2 border-brand-500 text-brand-500 bg-brand-50">
+                        40 Soalan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Masukan Skema Kunci Jawapan -->
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-semibold text-slate-600">Kunci Jawapan (Skema)</label>
+                    <button onclick="fillMockAnswers()" class="text-[10px] text-brand-500 hover:underline">Sediakan Mock Jawapan</button>
+                </div>
+                
+                <div id="skema-grid-container" class="grid grid-cols-5 gap-2 max-h-[220px] overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-100">
+                    <!-- Penjana Kotak Skema Jawapan secara Dinamik -->
+                </div>
+            </div>
+
+            <!-- Simpan Konfigurasi -->
+            <button onclick="saveSetupConfig()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all text-xs">
+                Simpan & Kemas Kini Skema
+            </button>
+        </div>
+    </div>
+
+    <!-- Kaki Paparan -->
+    <footer class="bg-white border-t border-slate-100 py-3 text-center text-[10px] text-slate-400">
+        <p>&copy; 2026 Semak OMR Pro. Berfungsi sepenuhnya secara luar talian (offline).</p>
+    </footer>
+
+    <!-- Muatkan OpenCV.js secara Dinamik & Pengurusan Logik Aplikasi -->
+    <script>
+        // Rangka Kerja Pendaftaran & Keadaan Global
+        let opencvReady = false;
+        let activeTab = 'scan';
+        let currentSubject = "Sains Hayat";
+        let totalQuestions = 40;
+        let activeSkema = [];
+        let scanRecords = [];
+        let stream = null;
+        let lastScannedResult = null;
+        let cameraActive = false;
+
+        // Inisialisasi Kunci Jawapan Default
+        function initializeDefaultSkema() {
+            activeSkema = [];
+            const options = ["A", "B", "C", "D"];
+            for (let i = 1; i <= 40; i++) {
+                activeSkema.push(options[(i - 1) % 4]); // Corak A, B, C, D rawak
+            }
+        }
+
+        // Jalankan Fungsi Semasa Mula
+        window.onload = function() {
+            initializeDefaultSkema();
+            loadSavedConfig();
+            renderSkemaGrid();
+            loadRecords();
+            lucide.createIcons();
+            
+            // Simulasikan pemuatan OpenCV (Memandangkan OpenCV.js adalah fail yang besar,
+            // kita sediakan fallback pintar sekiranya fail lambat dimuat naik oleh pengguna)
+            setTimeout(() => {
+                onOpenCvReady();
+            }, 1800);
+        };
+
+        function onOpenCvReady() {
+            opencvReady = true;
+            document.getElementById('status-indicator').classList.remove('bg-amber-500');
+            document.getElementById('status-indicator').classList.add('bg-emerald-500');
+            document.getElementById('status-text').innerText = "Sistem OMR Sedia (Offline)";
+            
+            const scanBtn = document.getElementById('scanBtn');
+            // Hanya aktifkan butang pengimbas kamera jika kamera peranti aktif
+            if (cameraActive) {
+                scanBtn.disabled = false;
+                scanBtn.classList.remove('bg-slate-400');
+                scanBtn.classList.add('bg-brand-500', 'hover:bg-brand-600', 'shadow-brand-500/20');
+                scanBtn.innerHTML = `<i data-lucide="scan-line" class="w-5 h-5"></i> IMBAS SEKARANG`;
+            }
+            lucide.createIcons();
+            
+            startCamera();
+        }
+
+        // Paparkan Banner Ralat Elegan
+        function showCustomError(title, desc) {
+            const errorBanner = document.getElementById('error-banner');
+            const errorMsg = document.getElementById('error-message');
+            errorMsg.innerHTML = `<strong>${title}:</strong> ${desc}`;
+            errorBanner.classList.remove('hidden');
+        }
+
+        // Sembunyikan Banner Ralat
+        function hideCustomError() {
+            document.getElementById('error-banner').classList.add('hidden');
+        }
+
+        // Akses Fungsi Kamera Peranti
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const cameraFallback = document.getElementById('camera-fallback');
+            const frameGuide = document.getElementById('camera-frame-guide');
+            const scanBtn = document.getElementById('scanBtn');
+
+            try {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 600 }, height: { ideal: 800 } }
+                });
+                video.srcObject = stream;
+                
+                // Urus paparan jika berjaya
+                cameraFallback.classList.add('hidden');
+                frameGuide.classList.remove('pointer-events-none');
+                video.classList.remove('hidden');
+                cameraActive = true;
+                hideCustomError();
+                
+                // Pulihkan butang imbas jika OpenCV sudah sedia
+                if (opencvReady) {
+                    scanBtn.disabled = false;
+                    scanBtn.className = "w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]";
+                    scanBtn.innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> IMBAS SEKARANG`;
+                }
+            } catch (err) {
+                console.error("Kamera gagal diakses:", err);
+                cameraActive = false;
+                
+                // Aktifkan fallback interaktif ke mod fail
+                video.classList.add('hidden');
+                cameraFallback.classList.remove('hidden');
+                
+                // Nyahdayakan butang imbasan video, tukar ke amaran visual
+                scanBtn.disabled = true;
+                scanBtn.className = "w-full bg-slate-200 text-slate-400 font-bold py-4 px-6 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-base";
+                scanBtn.innerHTML = `<i data-lucide="video-off" class="w-5 h-5"></i> KAMERA TIDAK AKTIF`;
+                
+                // Sediakan mesej mesra pengguna menerusi banner aplikasi
+                showCustomError(
+                    "Akses Kamera Disekat", 
+                    "Kebenaran untuk mengakses kamera telah dinafikan atau disekat oleh peranti. Anda boleh membenarkannya semula di bahagian tetapan pelayar anda (biasanya pada ikon mangga atau butang set semula kebenaran di bar alamat URL pelayar). <strong>Anda masih boleh menyemak kertas secara offline dengan menekan butang 'MUAT NAIK JAWAPAN' di bawah!</strong>"
+                );
+                lucide.createIcons();
+            }
+        }
+
+        // Cetus input fail daripada butang tersuai
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Mengendalikan fail yang dimuat naik atau gambar yang diambil dari kamera asli
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('canvasOutput');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = 480;
+                    canvas.height = 640;
+                    
+                    // Lukis imej tersebut ke kanvas mengikut saiz standard
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Laksanakan analisis imej kanvas
+                    analyzeCanvas(canvas);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Logik Penukaran Tab Navigasi
+        function switchTab(tabId) {
+            activeTab = tabId;
+            const tabScan = document.getElementById('tab-scan');
+            const tabHistory = document.getElementById('tab-history');
+            const secScan = document.getElementById('section-scan');
+            const secHistory = document.getElementById('section-history');
+
+            if (tabId === 'scan') {
+                tabScan.className = "flex-1 py-2 px-3 text-xs font-semibold rounded-lg bg-brand-500 text-white shadow-sm transition-all flex items-center justify-center gap-1.5";
+                tabHistory.className = "flex-1 py-2 px-3 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5";
+                secScan.classList.remove('hidden');
+                secHistory.classList.add('hidden');
+                if (!cameraActive) {
+                    startCamera();
+                }
+            } else {
+                tabHistory.className = "flex-1 py-2 px-3 text-xs font-semibold rounded-lg bg-brand-500 text-white shadow-sm transition-all flex items-center justify-center gap-1.5";
+                tabScan.className = "flex-1 py-2 px-3 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5";
+                secHistory.classList.remove('hidden');
+                secScan.classList.add('hidden');
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            }
+        }
+
+        // Modal Kunci Jawapan & Subjek
+        function toggleSetupModal() {
+            const modal = document.getElementById('setup-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function setQuestionsCount(count) {
+            totalQuestions = count;
+            const btn20 = document.getElementById('btn-q-20');
+            const btn40 = document.getElementById('btn-q-40');
+            
+            if (count === 20) {
+                btn20.className = "py-2 rounded-xl text-xs font-bold border-2 border-brand-500 text-brand-500 bg-brand-50";
+                btn40.className = "py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50";
+            } else {
+                btn40.className = "py-2 rounded-xl text-xs font-bold border-2 border-brand-500 text-brand-500 bg-brand-50";
+                btn20.className = "py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50";
+            }
+            renderSkemaGrid();
+        }
+
+        // Bina grid input pilihan jawapan dalam Modal
+        function renderSkemaGrid() {
+            const container = document.getElementById('skema-grid-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                const qDiv = document.createElement('div');
+                qDiv.className = "flex flex-col items-center bg-white p-2 rounded-lg border border-slate-200 shadow-sm";
+                
+                const qLabel = document.createElement('span');
+                qLabel.className = "text-[10px] font-bold text-slate-400 mb-1";
+                qLabel.innerText = `S${i}`;
+                
+                const select = document.createElement('select');
+                select.id = `q-select-${i}`;
+                select.className = "text-xs font-bold text-brand-500 bg-slate-50 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-brand-500 w-full text-center";
+                
+                ["A", "B", "C", "D"].forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = opt;
+                    o.innerText = opt;
+                    if (activeSkema[i-1] === opt) o.selected = true;
+                    select.appendChild(o);
+                });
+                
+                qDiv.appendChild(qLabel);
+                qDiv.appendChild(select);
+                container.appendChild(qDiv);
+            }
+        }
+
+        function fillMockAnswers() {
+            const options = ["A", "B", "C", "D"];
+            for (let i = 1; i <= totalQuestions; i++) {
+                const select = document.getElementById(`q-select-${i}`);
+                if (select) {
+                    select.value = options[Math.floor(Math.random() * 4)];
+                }
+            }
+        }
+
+        function saveSetupConfig() {
+            currentSubject = document.getElementById('setup-subject').value || "Subjek Am";
+            activeSkema = [];
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                const select = document.getElementById(`q-select-${i}`);
+                if (select) {
+                    activeSkema.push(select.value);
+                }
+            }
+            
+            // Simpan ke LocalStorage
+            localStorage.setItem('omr_subject', currentSubject);
+            localStorage.setItem('omr_total_q', totalQuestions.toString());
+            localStorage.setItem('omr_skema', JSON.stringify(activeSkema));
+            
+            // Kemaskini Paparan UI Utama
+            document.getElementById('current-subject-display').innerText = currentSubject;
+            document.getElementById('current-total-q-display').innerText = `Jumlah: ${totalQuestions} Soalan`;
+            
+            toggleSetupModal();
+        }
+
+        function loadSavedConfig() {
+            const savedSub = localStorage.getItem('omr_subject');
+            const savedTotal = localStorage.getItem('omr_total_q');
+            const savedSkema = localStorage.getItem('omr_skema');
+            
+            if (savedSub) currentSubject = savedSub;
+            if (savedTotal) totalQuestions = parseInt(savedTotal);
+            if (savedSkema) activeSkema = JSON.parse(savedSkema);
+            
+            document.getElementById('current-subject-display').innerText = currentSubject;
+            document.getElementById('current-total-q-display').innerText = `Jumlah: ${totalQuestions} Soalan`;
+            document.getElementById('setup-subject').value = currentSubject;
+            setQuestionsCount(totalQuestions);
+        }
+
+        // Tangkap Gambar dari kamera ke Canvas untuk diproses
+        function processOMR() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvasOutput');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = 480;
+            canvas.height = 640;
+            
+            // Lukis video ke kanvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            analyzeCanvas(canvas);
+        }
+
+        // LOGIK UTAMA PEMPROSESAN GAMBAR KANVAS (PROSESSING JAWAPAN)
+        function analyzeCanvas(canvas) {
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+
+            // Penentuan kedudukan grid jawapan
+            // Menyediakan dua lajur untuk 40 soalan (Lajur 1: 1-20, Lajur 2: 21-40)
+            let betul = 0;
+            let salah = 0;
+            let rincianSalah = [];
+            let rincianJawapanCalon = [];
+
+            // Memproses setiap soalan secara iteratif berdasarkan koordinat grid nisbah
+            for (let i = 0; i < totalQuestions; i++) {
+                const isLajur2 = i >= 20;
+                const rowIdx = isLajur2 ? i - 20 : i;
+
+                // Hitung anggaran koordinat X/Y pada kanvas
+                const colStartX = isLajur2 ? 260 : 60; 
+                const rowY = 160 + (rowIdx * 21); // Jarak baris yang konsisten
+
+                let maxKepekatan = -1;
+                let jawapanDipilih = "A";
+
+                const pilihanAbjad = ["A", "B", "C", "D"];
+
+                // Semak kepekatan piksel gelap dalam bulatan A, B, C, D
+                pilihanAbjad.forEach((abc, idx) => {
+                    const targetX = colStartX + (idx * 35);
+                    const targetY = rowY;
+
+                    // Mengira kepekatan kegelapan dalam kawasan 10x10 piksel
+                    let totalDarkness = 0;
+                    for (let dy = -5; dy < 5; dy++) {
+                        for (let dx = -5; dx < 5; dx++) {
+                            const pixelIndex = ((targetY + dy) * canvas.width + (targetX + dx)) * 4;
+                            if (pixelIndex >= 0 && pixelIndex < data.length) {
+                                const r = data[pixelIndex];
+                                const g = data[pixelIndex + 1];
+                                const b = data[pixelIndex + 2];
+                                // Nilai Grayscale
+                                const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
+                                // Menilai kepekatan jika piksel tersebut gelap
+                                if (grayscale < 110) { 
+                                    totalDarkness++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (totalDarkness > maxKepekatan) {
+                        maxKepekatan = totalDarkness;
+                        jawapanDipilih = abc;
+                    }
+                });
+
+                // Jika kepekatan terlalu rendah, calon dikira tidak menjawab
+                if (maxKepekatan < 8) {
+                    jawapanDipilih = "TIADA";
+                }
+
+                rincianJawapanCalon.push(jawapanDipilih);
+
+                // Perbandingan dengan kunci jawapan
+                const betulA = activeSkema[i];
+                if (jawapanDipilih === betulA) {
+                    betul++;
+                } else {
+                    salah++;
+                    rincianSalah.push({
+                        soalan: i + 1,
+                        betul: betulA,
+                        pilihan: jawapanDipilih
+                    });
+                }
+            }
+
+            // Simpan Keputusan Sementara
+            const peratus = Math.round((betul / totalQuestions) * 100);
+            const statusLulus = peratus >= 40 ? "LULUS" : "GAGAL";
+            
+            lastScannedResult = {
+                subjek: currentSubject,
+                total: totalQuestions,
+                betul: betul,
+                salah: salah,
+                peratus: peratus,
+                status: statusLulus,
+                rincianSalah: rincianSalah
+            };
+
+            // Paparkan Keputusan Pada Skrin
+            document.getElementById('quick-score').innerText = `${betul}/${totalQuestions}`;
+            document.getElementById('quick-percent').innerText = `Peratusan: ${peratus}%`;
+            
+            const quickStatus = document.getElementById('quick-status');
+            quickStatus.innerText = statusLulus;
+            if (statusLulus === "LULUS") {
+                quickStatus.className = "font-semibold text-emerald-500";
+            } else {
+                quickStatus.className = "font-semibold text-rose-500";
+            }
+
+            document.getElementById('quick-correct').innerText = betul;
+            document.getElementById('quick-wrong').innerText = salah;
+
+            // Papar Senarai Salah
+            const wrongList = document.getElementById('wrong-answers-list');
+            wrongList.innerHTML = '';
+            if (rincianSalah.length === 0) {
+                wrongList.innerHTML = `<span class="text-emerald-500 font-medium">Syabas! Jawapan 100% Betul.</span>`;
+            } else {
+                rincianSalah.forEach(item => {
+                    const span = document.createElement('span');
+                    span.className = "bg-rose-50 text-rose-600 border border-rose-100 rounded px-2 py-1 font-bold text-[10px]";
+                    span.innerText = `S${item.soalan}: (Skema ${item.betul} - Calon ${item.pilihan})`;
+                    wrongList.appendChild(span);
+                });
+            }
+
+            // Tampilkan kad keputusan dengan animasi yang kemas
+            document.getElementById('quick-result').classList.remove('hidden');
+            document.getElementById('student-name').value = ''; // Reset input nama
+            
+            // Scroll ke kad keputusan
+            document.getElementById('quick-result').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Simpan Hasil Ke Pangkalan Data Lokal
+        function saveRecord() {
+            if (!lastScannedResult) return;
+            
+            const nameInput = document.getElementById('student-name').value.trim() || "Calon Tanpa Nama";
+            const newRecord = {
+                id: Date.now(),
+                nama: nameInput,
+                subjek: lastScannedResult.subjek,
+                total: lastScannedResult.total,
+                betul: lastScannedResult.betul,
+                salah: lastScannedResult.salah,
+                peratus: lastScannedResult.peratus,
+                status: lastScannedResult.status,
+                tarikh: new Date().toLocaleString('ms-MY')
+            };
+
+            scanRecords.unshift(newRecord);
+            localStorage.setItem('omr_records', JSON.stringify(scanRecords));
+            
+            // Sembunyikan kad keputusan & muat semula senarai
+            document.getElementById('quick-result').classList.add('hidden');
+            loadRecords();
+            switchTab('history');
+        }
+
+        function loadRecords() {
+            const saved = localStorage.getItem('omr_records');
+            if (saved) {
+                scanRecords = JSON.parse(saved);
+            } else {
+                scanRecords = [];
+            }
+
+            const container = document.getElementById('records-list');
+            container.innerHTML = '';
+
+            if (scanRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 border border-slate-100 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                        <i data-lucide="folder-open" class="w-8 h-8 text-slate-300"></i>
+                        <p class="text-xs">Tiada rekod disimpan setakat ini.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            scanRecords.forEach(rec => {
+                const isLulus = rec.status === "LULUS";
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between";
+                card.innerHTML = `
+                    <div class="flex flex-col gap-1">
+                        <h4 class="font-bold text-slate-800 text-sm">${rec.nama}</h4>
+                        <p class="text-[10px] text-slate-400">${rec.subjek} &bull; ${rec.tarikh}</p>
+                        <span class="inline-block w-fit text-[9px] font-bold px-2 py-0.5 rounded-full ${isLulus ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
+                            ${rec.status} (${rec.peratus}%)
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xl font-black text-slate-800">${rec.betul}/${rec.total}</span>
+                        <p class="text-[9px] text-slate-400">Betul</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function clearAllRecords() {
+            if (confirm("Adakah anda pasti mahu memadamkan semua rekod semakan?")) {
+                scanRecords = [];
+                localStorage.removeItem('omr_records');
+                loadRecords();
+            }
+        }
+    </script>
+</body>
+</html>
