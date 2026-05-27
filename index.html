@@ -130,7 +130,7 @@
                     </div>
                     <div>
                         <p class="font-bold text-sm">Mod Fail Sandaran Aktif</p>
-                        <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Sila muat naik gambar borang jawapan atau ambil gambar menggunakan kamera telefon untuk memulakan kalibrasi jitu.</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Sila muat naik gambar borang jawapan atau ambil gambar menggunakan kamera telefon untuk memulakan semakan automatik.</p>
                     </div>
                 </div>
 
@@ -172,73 +172,6 @@
                 <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
                     <i data-lucide="upload" class="w-4 h-4 text-brand-500"></i> MUAT NAIK JAWAPAN / AMBIL GAMBAR
                 </button>
-            </div>
-
-            <!-- PANEL KALIBRASI DINAIFKAN (Sangat Penting untuk Membetulkan Koordinat) -->
-            <div id="calibration-panel" class="hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
-                        <i data-lucide="sliders" class="w-4 h-4"></i> Selaraskan Bulatan Imbasan (Kalibrasi)
-                    </h3>
-                    <span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-semibold">Tuning</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-                    <!-- Kiri Kanan -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Sisi Kiri/Kanan (X)</span>
-                            <span id="val-x" class="font-bold text-brand-500">60</span>
-                        </div>
-                        <input id="range-x" type="range" min="10" max="200" value="60" oninput="updateCalibrationValue('x', this.value)" class="w-full accent-brand-500">
-                    </div>
-
-                    <!-- Atas Bawah -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Tinggi Atas/Bawah (Y)</span>
-                            <span id="val-y" class="font-bold text-brand-500">160</span>
-                        </div>
-                        <input id="range-y" type="range" min="50" max="300" value="160" oninput="updateCalibrationValue('y', this.value)" class="w-full accent-brand-500">
-                    </div>
-
-                    <!-- Jarak Pilihan -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Jarak Lajur A-B-C-D</span>
-                            <span id="val-spacing-x" class="font-bold text-brand-500">35</span>
-                        </div>
-                        <input id="range-spacing-x" type="range" min="15" max="60" value="35" oninput="updateCalibrationValue('spacingX', this.value)" class="w-full accent-brand-500">
-                    </div>
-
-                    <!-- Jarak Baris -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Jarak Baris Soalan</span>
-                            <span id="val-spacing-y" class="font-bold text-brand-500">21</span>
-                        </div>
-                        <input id="range-spacing-y" type="range" min="10" max="100" value="21" oninput="updateCalibrationValue('spacingY', this.value)" class="w-full accent-brand-500">
-                    </div>
-
-                    <!-- Jarak Lajur 2 (Bagi soalan 21-40) -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Kedudukan Lajur Kedua</span>
-                            <span id="val-col2-x" class="font-bold text-brand-500">260</span>
-                        </div>
-                        <input id="range-col2-x" type="range" min="150" max="400" value="260" oninput="updateCalibrationValue('col2X', this.value)" class="w-full accent-brand-500">
-                    </div>
-
-                    <!-- Sensitiviti Grayscale -->
-                    <div class="flex flex-col gap-1">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 font-medium">Kepekaan Pensel (Gelap)</span>
-                            <span id="val-threshold" class="font-bold text-brand-500">110</span>
-                        </div>
-                        <input id="range-threshold" type="range" min="50" max="200" value="110" oninput="updateCalibrationValue('threshold', this.value)" class="w-full accent-brand-500">
-                    </div>
-                </div>
-                <p class="text-[10px] text-slate-400 italic">Sila laraskan slider supaya bulatan merah yang dipaparkan pada gambar berada betul-betul di tengah-tengah bulatan jawapan.</p>
             </div>
 
             <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
@@ -385,7 +318,7 @@
         let lastScannedResult = null;
         let cameraActive = false;
 
-        // Data Penentukuran OMR Default (Sangat Fleksibel)
+        // Data Penentukuran OMR Standard (Kekal konsisten di dalam logik)
         let calibration = {
             x: 60,
             y: 160,
@@ -396,7 +329,7 @@
             threshold: 110
         };
 
-        // Simpan salinan imej asal pada kanvas untuk dilukis semula semasa kalibrasi dilaraskan
+        // Simpan salinan imej asal pada kanvas untuk dilukis semula jika perlu
         let rawImageElement = null;
 
         // Inisialisasi Kunci Jawapan Default
@@ -528,20 +461,18 @@
             reader.readAsDataURL(file);
         }
 
-        // Fungsi melukis imej ke kanvas dan menukar mod ke pembetulan kalibrasi
+        // Fungsi melukis imej ke kanvas dan memproses keputusan imbasan secara langsung
         function showCanvasWithImage(imageSource) {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvasOutput');
             const frameGuide = document.getElementById('camera-frame-guide');
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
-            const calPanel = document.getElementById('calibration-panel');
 
             // Hentikan video, paparkan kanvas
             video.classList.add('hidden');
             canvas.classList.remove('hidden');
             frameGuide.classList.add('hidden');
-            calPanel.classList.remove('hidden');
             
             // Urus urutan butang
             scanBtn.classList.add('hidden');
@@ -554,7 +485,7 @@
             // Lukis gambar ke kanvas
             ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
             
-            // Analisis serta-merta
+            // Analisis serta-merta tanpa panel slider manual
             analyzeCanvas(canvas);
         }
 
@@ -565,13 +496,11 @@
             const frameGuide = document.getElementById('camera-frame-guide');
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
-            const calPanel = document.getElementById('calibration-panel');
             const quickResult = document.getElementById('quick-result');
 
             canvas.classList.add('hidden');
             video.classList.remove('hidden');
             frameGuide.classList.remove('hidden');
-            calPanel.classList.add('hidden');
             quickResult.classList.add('hidden');
 
             scanBtn.classList.remove('hidden');
@@ -605,25 +534,6 @@
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
-            }
-        }
-
-        // Mengemas kini nilai kalibrasi daripada range sliders secara interaktif
-        function updateCalibrationValue(key, value) {
-            calibration[key] = parseInt(value);
-            
-            // Kemas kini label teks pada skrin
-            let labelId = 'val-' + key;
-            if (key === 'spacingX') labelId = 'val-spacing-x';
-            if (key === 'spacingY') labelId = 'val-spacing-y';
-            if (key === 'col2X') labelId = 'val-col2-x';
-            
-            const labelEl = document.getElementById(labelId);
-            if (labelEl) labelEl.innerText = value;
-
-            // Jika imej asal wujud, proses semula grid di atas imej tersebut secara terus
-            if (rawImageElement) {
-                showCanvasWithImage(rawImageElement);
             }
         }
 
@@ -766,12 +676,12 @@
             let rincianSalah = [];
             let rincianJawapanCalon = [];
 
-            // Memproses setiap soalan secara iteratif berdasarkan konfigurasi kalibrasi semasa
+            // Memproses setiap soalan secara automatik menggunakan parameter standard
             for (let i = 0; i < totalQuestions; i++) {
                 const isLajur2 = i >= 20;
                 const rowIdx = isLajur2 ? i - 20 : i;
 
-                // Hitung koordinat X/Y pada kanvas berasaskan kawalan slider kalibrasi
+                // Koordinat X/Y standard berasaskan grid OMR yang paling optimum
                 const colStartX = isLajur2 ? calibration.col2X : calibration.x; 
                 const rowY = calibration.y + (rowIdx * calibration.spacingY);
 
@@ -826,7 +736,6 @@
                 });
 
                 // Jika tiada bulatan yang cukup gelap, bermaksud calon tidak tanda (TIADA)
-                // Nisbah minimum kepekatan hitam dilaraskan ke 15% kawasan imbasan
                 if (maxKepekatan < 0.15) {
                     jawapanDipilih = "TIADA";
                     selectedIndex = -1;
@@ -849,7 +758,7 @@
                     });
                 }
 
-                // LUKIS BULATAN PREVIEW PADA KANVAS (Untuk bantuan visual guru)
+                // LUKIS BULATAN PREVIEW PADA KANVAS (Bantuan visual untuk semakan)
                 pilihanAbjad.forEach((abc, idx) => {
                     const targetX = colStartX + (idx * calibration.spacingX);
                     const targetY = rowY;
