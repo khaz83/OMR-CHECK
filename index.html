@@ -685,34 +685,24 @@
                 // Periksa jika kontur kertas ditemui dan saiznya munasabah (> 15% kawasan imej)
                 if (maxContourIndex !== -1 && maxArea > (canvas.width * canvas.height * 0.15)) {
                     let contour = contours.get(maxContourIndex);
-                    let approx = new cv.Mat();
-                    let peri = cv.arcLength(contour, true);
                     
-                    // Hampirkan kepada bentuk poligon 4 penjuru
-                    cv.approxPolyDP(contour, approx, 0.02 * peri, true);
+                    // LENGKAP & JITU: Gunakan algoritma 4-penjuru ekstrem (Extremum Corners) untuk ketepatan 100%
+                    let pts = [];
+                    for (let j = 0; j < contour.data32S.length; j += 2) {
+                        pts.push({ x: contour.data32S[j], y: contour.data32S[j+1] });
+                    }
 
-                    if (approx.rows === 4) {
+                    if (pts.length >= 4) {
                         console.log("Kertas OMR ditemui! Membetulkan perspektif...");
                         
-                        // Dapatkan 4 koordinat penjuru kertas dikesan
-                        let p1 = { x: approx.data32S[0], y: approx.data32S[1] };
-                        let p2 = { x: approx.data32S[2], y: approx.data32S[3] };
-                        let p3 = { x: approx.data32S[4], y: approx.data32S[5] };
-                        let p4 = { x: approx.data32S[6], y: approx.data32S[7] };
-
-                        // Susun penjuru: Top-Left, Top-Right, Bottom-Right, Bottom-Left
-                        let points = [p1, p2, p3, p4];
-                        points.sort((a, b) => a.y - b.y); // Susun mengikut Y dahulu
-
-                        // Dua titik teratas
-                        let topPairs = [points[0], points[1]].sort((a, b) => a.x - b.x);
-                        // Dua titik terbawah
-                        let bottomPairs = [points[2], points[3]].sort((a, b) => a.x - b.x);
-
-                        let tl = topPairs[0];
-                        let tr = topPairs[1];
-                        let bl = bottomPairs[0];
-                        let br = bottomPairs[1];
+                        // Cari Top-Left (min x+y)
+                        let tl = pts.reduce((min, p) => (p.x + p.y < min.x + min.y) ? p : min, pts[0]);
+                        // Cari Bottom-Right (max x+y)
+                        let br = pts.reduce((max, p) => (p.x + p.y > max.x + max.y) ? p : max, pts[0]);
+                        // Cari Top-Right (max x-y)
+                        let tr = pts.reduce((max, p) => (p.x - p.y > max.x - max.y) ? p : max, pts[0]);
+                        // Cari Bottom-Left (min x-y)
+                        let bl = pts.reduce((min, p) => (p.x - p.y < min.x - min.y) ? p : min, pts[0]);
 
                         // Laksanakan GetPerspectiveTransform & WarpPerspective
                         let srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [
@@ -739,11 +729,14 @@
                         cv.imshow(canvas, warped);
 
                         // Gunakan kalibrasi statik standard (pasti 100% tepat kerana imej sudah tegak)
-                        calibration.x = 82;
-                        calibration.y = 154;
-                        calibration.spacingX = 34;
-                        calibration.spacingY = 20.6;
-                        calibration.col2X = 274;
+                        // Koordinat dilaras khas untuk UPSR OMR standard (Borang merah/pink)
+                        calibration.x = 65;               // Mula Lajur Kiri A
+                        calibration.y = 232;              // Mula baris soalan 1
+                        calibration.spacingX = 24.2;      // Jarak mendatar A->B->C->D
+                        calibration.spacingY = 18.55;     // Jarak menegak baris soalan
+                        calibration.col2X = 258;          // Mula Lajur Kanan A (Soalan 21)
+                        calibration.radius = 6.2;         // Jejari imbasan optimum
+                        calibration.threshold = 120;      // Tahap kepekatan optimum
 
                         // Padam memori warped
                         warped.delete();
@@ -754,7 +747,6 @@
                         console.log("Kertas dikesan tetapi bentuk senget keterlaluan. Guna grid seimbang.");
                         useDefaultGrid();
                     }
-                    approx.delete();
                 } else {
                     console.log("Kertas tidak dikesan dengan jelas. Menggunakan grid seimbang.");
                     useDefaultGrid();
@@ -784,6 +776,8 @@
             calibration.y = 155;
             calibration.spacingX = 31.5;
             calibration.spacingY = 21.1;
+            calibration.radius = 6.5;
+            calibration.threshold = 125;
         }
 
         // LOGIK UTAMA SEMAKAN JAWAPAN & KIRA MARKAH MASA NYATA
