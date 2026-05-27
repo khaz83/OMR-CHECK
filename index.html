@@ -57,8 +57,8 @@
                 <div>
                     <h1 class="text-base font-bold text-slate-800 tracking-tight">Semak OMR Pro</h1>
                     <p class="text-[10px] text-slate-500 flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" id="status-indicator"></span>
-                        <span id="status-text">Memuatkan Sistem Pintar...</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" id="status-indicator"></span>
+                        <span id="status-text">Sistem Sedia</span>
                     </p>
                 </div>
             </div>
@@ -111,7 +111,7 @@
                     <p id="current-total-q-display" class="text-xs text-blue-100 mt-0.5">Jumlah: 40 Soalan</p>
                 </div>
                 <button onclick="toggleSetupModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm self-start sm:self-auto">
-                    Tukar Subjek
+                    Tukar Subjek / Skema
                 </button>
             </div>
 
@@ -124,15 +124,15 @@
                     <!-- Kanvas Interaktif untuk Paparan Preview & Kalibrasi -->
                     <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10"></canvas>
                     
-                    <!-- Loading Indicator Pengimbasan Automatik -->
+                    <!-- Loading Indicator Pengimbasan -->
                     <div id="scanning-loader" class="hidden absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-30">
                         <div class="relative w-16 h-16">
                             <div class="absolute inset-0 rounded-full border-4 border-slate-700"></div>
                             <div class="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin"></div>
                         </div>
                         <div>
-                            <p class="font-bold text-sm tracking-wide text-brand-400 uppercase">Sistem Pengimbasan Automatik</p>
-                            <p class="text-xs text-slate-300 mt-1 max-w-[280px]">Mendeteksi 4 penjuru kertas, membetulkan perspektif senget, dan memproses markah...</p>
+                            <p class="font-bold text-sm tracking-wide text-brand-400 uppercase">Sistem Memproses Jawapan</p>
+                            <p class="text-xs text-slate-300 mt-1 max-w-[280px]">Menganalisis bintik hitam dan mengira markah calon...</p>
                         </div>
                     </div>
 
@@ -143,7 +143,7 @@
                         </div>
                         <div>
                             <p class="font-bold text-sm">Mod Fail Sandaran Aktif</p>
-                            <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Sila muat naik gambar borang jawapan atau ambil gambar menggunakan kamera telefon untuk memulakan semakan automatik.</p>
+                            <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Kamera disekat atau tiada. Sila gunakan fungsi muat naik gambar di bawah untuk menyemak kertas jawapan.</p>
                         </div>
                     </div>
 
@@ -169,8 +169,8 @@
                 <!-- Bahagian Kawalan Pengimbasan -->
                 <div class="flex flex-col gap-3">
                     <div class="flex gap-2">
-                        <button id="scanBtn" onclick="processOMR()" disabled class="flex-1 bg-slate-400 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98]">
-                            <i data-lucide="scan-face" class="w-5 h-5"></i> MEMULAKAN KAMERA...
+                        <button id="scanBtn" onclick="processOMR()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98]">
+                            <i data-lucide="scan-line" class="w-5 h-5"></i> IMBAS SEKARANG
                         </button>
                         <button id="resetBtn" onclick="resetToLiveCamera()" class="hidden bg-slate-600 hover:bg-slate-700 text-white font-bold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i> IMBAS KERTAS LAIN
@@ -180,7 +180,7 @@
                     <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
                     
                     <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3.5 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
-                        <i data-lucide="camera" class="w-4 h-4 text-brand-500"></i> AMBIL GAMBAR / MUAT NAIK JAWAPAN
+                        <i data-lucide="image" class="w-4 h-4 text-brand-500"></i> AMBIL GAMBAR / MUAT NAIK JAWAPAN
                     </button>
                 </div>
             </div>
@@ -188,13 +188,13 @@
             <!-- Panel Kanan: Pelarasan Grid & Paparan Keputusan Cepat -->
             <div class="col-span-1 md:col-span-6 flex flex-col gap-4">
                 
-                <!-- PANEL PELARASAN GRID JAWAPAN (BUTANG PELARAS UNTUK BACKUP SAHAJA) -->
+                <!-- PANEL PELARASAN GRID JAWAPAN (BUTANG PELARAS UNTUK KETEPATAN MAKSIMUM) -->
                 <div id="alignment-panel" class="hidden bg-white p-5 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-4 animate-in fade-in duration-200">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
-                            <i data-lucide="sliders" class="w-4 h-4"></i> Pelarasan Grid (Jika Perlu Sahaja)
+                            <i data-lucide="sliders" class="w-4 h-4"></i> Laraskan Kedudukan Grid
                         </h3>
-                        <span class="text-[9px] bg-brand-50 text-brand-600 px-2.5 py-0.5 rounded-full font-bold">Laras Jitu</span>
+                        <span class="text-[9px] bg-brand-50 text-brand-600 px-2.5 py-0.5 rounded-full font-bold">Manual Tune</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 text-xs">
@@ -203,22 +203,22 @@
                             <span class="text-[10px] font-bold text-slate-400">GERAKKAN GRID</span>
                             <div class="grid grid-cols-3 gap-1.5 w-28">
                                 <div></div>
-                                <button onclick="nudgeGrid('y', -2)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-up" class="w-4 h-4 text-slate-600"></i></button>
+                                <button onclick="nudgeGrid('y', -3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-up" class="w-4 h-4 text-slate-600"></i></button>
                                 <div></div>
                                 
-                                <button onclick="nudgeGrid('x', -2)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
+                                <button onclick="nudgeGrid('x', -3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
                                 <div class="flex items-center justify-center"><i data-lucide="move" class="w-4 h-4 text-brand-500"></i></div>
-                                <button onclick="nudgeGrid('x', 2)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
+                                <button onclick="nudgeGrid('x', 3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
                                 
                                 <div></div>
-                                <button onclick="nudgeGrid('y', 2)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-down" class="w-4 h-4 text-slate-600"></i></button>
+                                <button onclick="nudgeGrid('y', 3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2.5 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-down" class="w-4 h-4 text-slate-600"></i></button>
                                 <div></div>
                             </div>
                         </div>
 
-                        <!-- Perenggangan / Saiz Baris & Lajur -->
+                        <!-- Perenggangan / Jarak Baris & Lajur -->
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center gap-2.5 text-center">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Perenggangan Grid</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Jarak Grid</span>
                             
                             <!-- Jarak Baris -->
                             <div class="flex gap-1.5 justify-center">
@@ -239,7 +239,7 @@
                 <div id="quick-result" class="hidden bg-white p-5 rounded-2xl border border-slate-100 shadow-xl flex flex-col gap-4 animate-in fade-in duration-300">
                     <div class="flex items-center justify-between">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5 text-brand-500">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i> Keputusan Imbasan Dinamik
+                            <i data-lucide="check-circle" class="w-5 h-5"></i> Imbasan Selesai
                         </h3>
                         <span id="result-timestamp" class="text-[10px] text-slate-400">Baru Sahaja</span>
                     </div>
@@ -276,7 +276,7 @@
                     <div class="flex gap-2">
                         <input id="student-name" type="text" placeholder="Masukkan Nama Murid" class="flex-1 border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:ring-1 focus:ring-brand-500 outline-none">
                         <button onclick="saveRecord()" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition-all flex items-center gap-1">
-                            <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                            <i data-lucide="save" class="w-4 h-4"></i> Simpan Keputusan
                         </button>
                     </div>
                 </div>
@@ -375,7 +375,7 @@
         // Rangka Kerja Pendaftaran & Keadaan Global
         let opencvReady = false;
         let activeTab = 'scan';
-        let currentSubject = "Sains Hayat";
+        let currentSubject = "Matematik (Siri 1)";
         let totalQuestions = 40;
         let activeSkema = [];
         let scanRecords = [];
@@ -384,13 +384,13 @@
         let cameraActive = false;
 
         // Data Penentukuran OMR Asal
-        // Sebaik sahaja kertas dilaraskan menerusi Perspective Warp, koordinat ini akan menjadi 100% Sempurna & Statik!
+        // Sejajar secara optimum untuk kertas OMR standard yang dimuat naik atau ditangkap
         let calibration = {
-            x: 82,            // Posisi mula lajur kiri A
-            y: 154,           // Posisi mula soalan 1
-            spacingX: 34,     // Jarak mendatar antara bulatan A, B, C, D
-            spacingY: 20.6,   // Jarak menegak antara soalan
-            col2X: 274,       // Posisi mula lajur kanan A (Soalan 21)
+            x: 94,            // Posisi mula lajur kiri A
+            y: 155,           // Posisi mula soalan 1
+            spacingX: 31.5,   // Jarak mendatar antara bulatan A, B, C, D
+            spacingY: 21.1,   // Jarak menegak antara soalan
+            col2X: 282,       // Posisi mula lajur kanan A (Soalan 21)
             radius: 6.5,      // Jejari kawasan semakan
             threshold: 125    // Sensitiviti kehitaman pensel
         };
@@ -415,21 +415,19 @@
             loadRecords();
             lucide.createIcons();
             
-            // Simulasikan pemuatan OpenCV secara selamat
-            setTimeout(() => {
-                onOpenCvReady();
-            }, 1800);
+            // Pengaktifan camera secara proaktif
+            startCamera();
         };
 
         // Fallback jika opencv.js luar talian tempatan gagal dimuatkan
         function onOpenCvError() {
-            console.log("Gagal memuatkan opencv.js tempatan. Mencari CDN...");
+            console.log("Mencari CDN untuk OpenCV.js...");
             let script = document.createElement('script');
             script.src = "https://docs.opencv.org/4.x/opencv.js";
             script.async = true;
             script.onload = onOpenCvReady;
             script.onerror = () => {
-                console.log("Fail OpenCV gagal dimuatkan sepenuhnya. Mod sandaran piksel diaktifkan.");
+                console.log("OpenCV gagal dimuatkan. Menggunakan pemprosesan kanvas natif sahaja.");
                 onOpenCvReady();
             };
             document.body.appendChild(script);
@@ -439,19 +437,12 @@
             opencvReady = true;
             document.getElementById('status-indicator').classList.remove('bg-amber-500');
             document.getElementById('status-indicator').classList.add('bg-emerald-500');
-            document.getElementById('status-text').innerText = "Sistem OMR Sedia (Offline)";
+            document.getElementById('status-text').innerText = "Sistem OMR Sedia";
             
             const scanBtn = document.getElementById('scanBtn');
-            // Hanya aktifkan butang pengimbas kamera jika kamera peranti aktif
-            if (cameraActive) {
-                scanBtn.disabled = false;
-                scanBtn.classList.remove('bg-slate-400');
-                scanBtn.classList.add('bg-brand-500', 'hover:bg-brand-600', 'shadow-brand-500/20');
-                scanBtn.innerHTML = `<i data-lucide="scan-line" class="w-5 h-5"></i> IMBAS SEKARANG`;
-            }
+            scanBtn.disabled = false;
+            scanBtn.className = "flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98]";
             lucide.createIcons();
-            
-            startCamera();
         }
 
         // Paparkan Banner Ralat Elegan
@@ -490,29 +481,26 @@
                 cameraActive = true;
                 hideCustomError();
                 
-                // Pulihkan butang imbas jika OpenCV sudah sedia
-                if (opencvReady) {
-                    scanBtn.disabled = false;
-                    scanBtn.className = "w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]";
-                    scanBtn.innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> IMBAS SEKARANG`;
-                }
+                // Pulihkan butang imbas
+                scanBtn.disabled = false;
+                scanBtn.className = "flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98]";
+                scanBtn.innerHTML = `<i data-lucide="scan-line" class="w-5 h-5"></i> IMBAS SEKARANG`;
             } catch (err) {
                 console.error("Kamera gagal diakses:", err);
                 cameraActive = false;
                 
-                // Nyahaktifkan paparan kamera
+                // Paparkan fallback imej
                 video.classList.add('hidden');
                 cameraFallback.classList.remove('hidden');
                 
-                // Nyahdayakan butang imbasan video, tukar ke amaran visual
+                // Pastikan butang imbas video dinyahaktifkan sekiranya tiada strim kamera aktif
                 scanBtn.disabled = true;
-                scanBtn.className = "w-full bg-slate-200 text-slate-400 font-bold py-4 px-6 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-base";
-                scanBtn.innerHTML = `<i data-lucide="video-off" class="w-5 h-5"></i> KAMERA TIDAK AKTIF`;
+                scanBtn.className = "flex-1 bg-slate-200 text-slate-400 font-bold py-4 px-4 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm";
+                scanBtn.innerHTML = `<i data-lucide="video-off" class="w-5 h-5"></i> TIADA STRIM KAMERA`;
                 
-                // Sediakan mesej mesra pengguna menerusi banner aplikasi
                 showCustomError(
-                    "Akses Kamera Disekat", 
-                    "Kebenaran untuk mengakses kamera telah dinafikan atau disekat oleh peranti. Anda boleh membenarkannya semula di bahagian tetapan pelayar anda (biasanya pada ikon mangga atau kesengetan URL). <strong>Anda masih boleh menyemak kertas secara offline dengan menekan butang 'MUAT NAIK JAWAPAN' di bawah!</strong>"
+                    "Kamera Tidak Dikesan", 
+                    "Sila muat naik gambar borang jawapan secara manual menggunakan butang di bawah untuk melakukan semakan offline."
                 );
                 lucide.createIcons();
             }
@@ -550,7 +538,7 @@
             const loader = document.getElementById('scanning-loader');
             const alignPanel = document.getElementById('alignment-panel');
 
-            // Papar loading screen pengesanan automatik
+            // Papar loading screen pengesanan
             loader.classList.remove('hidden');
 
             setTimeout(() => {
@@ -571,9 +559,9 @@
                 // Lukis gambar ke kanvas
                 ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
                 
-                // Tegakkan imej & Auto-Align secara pintar menggunakan OpenCV
-                warpAndProcessOMR(canvas);
-            }, 800);
+                // Analisis jitu dengan algoritma kanvas natif yang stabil & pantas
+                analyzeCanvas(canvas);
+            }, 600);
         }
 
         // Reset semula ke kamera langsung (Live view)
@@ -644,140 +632,143 @@
 
             // Lukis semula imej dan jalankan analisis semula
             const canvas = document.getElementById('canvasOutput');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(rawImageElement, 0, 0, canvas.width, canvas.height);
             analyzeCanvas(canvas);
         }
 
-        // ALGORITMA SCANNER PEMBETULAN PERSPEKTIF AUTOMATIK (PERSPECTIVE WARP)
-        function warpAndProcessOMR(canvas) {
-            try {
-                if (typeof cv === 'undefined' || !cv.Mat) {
-                    throw new Error("OpenCV belum sedia.");
-                }
+        // Modal Kunci Jawapan & Subjek
+        function toggleSetupModal() {
+            const modal = document.getElementById('setup-modal');
+            modal.classList.toggle('hidden');
+        }
 
-                let src = cv.imread(canvas);
-                let gray = new cv.Mat();
-                let blurred = new cv.Mat();
-                let thresh = new cv.Mat();
-                let contours = new cv.MatVector();
-                let hierarchy = new cv.Mat();
-
-                // 1. Tukar ke Grayscale
-                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-                // 2. Buang bising pasir (Gaussian Blur)
-                cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
-                // 3. Thresholding untuk mengesan sempadan kertas
-                cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
-
-                // 4. Cari kontur terbesar (biasanya kertas jawapan OMR)
-                cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-                let maxArea = 0;
-                let maxContourIndex = -1;
-                for (let i = 0; i < contours.size(); ++i) {
-                    let contour = contours.get(i);
-                    let area = cv.contourArea(contour);
-                    if (area > maxArea) {
-                        maxArea = area;
-                        maxContourIndex = i;
-                    }
-                }
-
-                // Periksa jika kontur kertas ditemui dan saiznya munasabah (> 15% kawasan imej)
-                if (maxContourIndex !== -1 && maxArea > (canvas.width * canvas.height * 0.15)) {
-                    let contour = contours.get(maxContourIndex);
-                    
-                    // LENGKAP & JITU: Gunakan algoritma 4-penjuru ekstrem (Extremum Corners) untuk ketepatan 100%
-                    let pts = [];
-                    for (let j = 0; j < contour.data32S.length; j += 2) {
-                        pts.push({ x: contour.data32S[j], y: contour.data32S[j+1] });
-                    }
-
-                    if (pts.length >= 4) {
-                        console.log("Kertas OMR ditemui! Membetulkan perspektif...");
-                        
-                        // Cari Top-Left (min x+y)
-                        let tl = pts.reduce((min, p) => (p.x + p.y < min.x + min.y) ? p : min, pts[0]);
-                        // Cari Bottom-Right (max x+y)
-                        let br = pts.reduce((max, p) => (p.x + p.y > max.x + max.y) ? p : max, pts[0]);
-                        // Cari Top-Right (max x-y)
-                        let tr = pts.reduce((max, p) => (p.x - p.y > max.x - max.y) ? p : max, pts[0]);
-                        // Cari Bottom-Left (min x-y)
-                        let bl = pts.reduce((min, p) => (p.x - p.y < min.x - min.y) ? p : min, pts[0]);
-
-                        // Laksanakan GetPerspectiveTransform & WarpPerspective
-                        let srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [
-                            tl.x, tl.y,
-                            tr.x, tr.y,
-                            br.x, br.y,
-                            bl.x, bl.y
-                        ]);
-                        let dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [
-                            0, 0,
-                            480, 0,
-                            480, 640,
-                            0, 640
-                        ]);
-
-                        let M = cv.getPerspectiveTransform(srcCoords, dstCoords);
-                        let warped = new cv.Mat();
-                        let dsize = new cv.Size(480, 640);
-                        
-                        // Warp kertas yang senget kepada rata (straightened document scanner effect)
-                        cv.warpPerspective(src, warped, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
-                        
-                        // Lukis semula imej yang telah ditegakkan dengan sempurna ke atas kanvas!
-                        cv.imshow(canvas, warped);
-
-                        // Gunakan kalibrasi statik standard (pasti 100% tepat kerana imej sudah tegak)
-                        // Koordinat dilaras khas untuk UPSR OMR standard (Borang merah/pink)
-                        calibration.x = 65;               // Mula Lajur Kiri A
-                        calibration.y = 232;              // Mula baris soalan 1
-                        calibration.spacingX = 24.2;      // Jarak mendatar A->B->C->D
-                        calibration.spacingY = 18.55;     // Jarak menegak baris soalan
-                        calibration.col2X = 258;          // Mula Lajur Kanan A (Soalan 21)
-                        calibration.radius = 6.2;         // Jejari imbasan optimum
-                        calibration.threshold = 120;      // Tahap kepekatan optimum
-
-                        // Padam memori warped
-                        warped.delete();
-                        M.delete();
-                        srcCoords.delete();
-                        dstCoords.delete();
+        function setQuestionsCount(count) {
+            totalQuestions = count;
+            const questionOptions = [10, 20, 30, 40];
+            
+            questionOptions.forEach(num => {
+                const btn = document.getElementById(`btn-q-${num}`);
+                if (btn) {
+                    if (num === count) {
+                        btn.className = "py-2.5 rounded-xl text-[11px] font-bold border-2 border-brand-500 text-brand-500 bg-brand-50 transition-all";
                     } else {
-                        console.log("Kertas dikesan tetapi bentuk senget keterlaluan. Guna grid seimbang.");
-                        useDefaultGrid();
+                        btn.className = "py-2.5 rounded-xl text-[11px] font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all";
                     }
-                } else {
-                    console.log("Kertas tidak dikesan dengan jelas. Menggunakan grid seimbang.");
-                    useDefaultGrid();
                 }
-
-                // Cleanup memori OpenCV
-                src.delete();
-                gray.delete();
-                blurred.delete();
-                thresh.delete();
-                contours.delete();
-                hierarchy.delete();
-
-            } catch (err) {
-                console.warn("Ralat pemprosesan imej, fallback diaktifkan:", err);
-                useDefaultGrid();
-            }
-
-            // Jalankan semakan muktamad
-            analyzeCanvas(canvas);
+            });
+            renderSkemaGrid();
         }
 
-        // Setkan grid standard seimbang di tengah jika gambar dipotong / tiada penjuru dikesan
-        function useDefaultGrid() {
-            calibration.x = 94;
-            calibration.col2X = 282;
-            calibration.y = 155;
-            calibration.spacingX = 31.5;
-            calibration.spacingY = 21.1;
-            calibration.radius = 6.5;
-            calibration.threshold = 125;
+        // Bina grid input pilihan jawapan dalam Modal
+        function renderSkemaGrid() {
+            const container = document.getElementById('skema-grid-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                if (activeSkema[i-1] === undefined) {
+                    activeSkema[i-1] = "A"; // Default initialization safely
+                }
+
+                const qDiv = document.createElement('div');
+                qDiv.className = "flex flex-col items-center bg-white p-2 rounded-lg border border-slate-200 shadow-sm";
+                
+                const qLabel = document.createElement('span');
+                qLabel.className = "text-[10px] font-bold text-slate-400 mb-1";
+                qLabel.innerText = `S${i}`;
+                
+                const select = document.createElement('select');
+                select.id = `q-select-${i}`;
+                select.className = "text-xs font-bold text-brand-500 bg-slate-50 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-brand-500 w-full text-center";
+                
+                ["A", "B", "C", "D"].forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = opt;
+                    o.innerText = opt;
+                    if (activeSkema[i-1] === opt) o.selected = true;
+                    select.appendChild(o);
+                });
+                
+                qDiv.appendChild(qLabel);
+                qDiv.appendChild(select);
+                container.appendChild(qDiv);
+            }
+        }
+
+        function fillMockAnswers() {
+            const options = ["A", "B", "C", "D"];
+            for (let i = 1; i <= totalQuestions; i++) {
+                const select = document.getElementById(`q-select-${i}`);
+                if (select) {
+                    select.value = options[Math.floor(Math.random() * 4)];
+                }
+            }
+        }
+
+        function saveSetupConfig() {
+            currentSubject = document.getElementById('setup-subject').value || "Subjek Am";
+            activeSkema = [];
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                const select = document.getElementById(`q-select-${i}`);
+                if (select) {
+                    activeSkema.push(select.value);
+                } else {
+                    activeSkema.push("A");
+                }
+            }
+            
+            // Simpan ke LocalStorage
+            localStorage.setItem('omr_subject', currentSubject);
+            localStorage.setItem('omr_total_q', totalQuestions.toString());
+            localStorage.setItem('omr_skema', JSON.stringify(activeSkema));
+            
+            // Kemaskini Paparan UI Utama
+            document.getElementById('current-subject-display').innerText = currentSubject;
+            document.getElementById('current-total-q-display').innerText = `Jumlah: ${totalQuestions} Soalan`;
+            
+            toggleSetupModal();
+            
+            // Proses semula jika imej asal ada
+            if (rawImageElement) {
+                showCanvasWithImage(rawImageElement);
+            }
+        }
+
+        function loadSavedConfig() {
+            const savedSub = localStorage.getItem('omr_subject');
+            const savedTotal = localStorage.getItem('omr_total_q');
+            const savedSkema = localStorage.getItem('omr_skema');
+            
+            if (savedSub) currentSubject = savedSub;
+            if (savedTotal) totalQuestions = parseInt(savedTotal);
+            if (savedSkema) activeSkema = JSON.parse(savedSkema);
+            
+            document.getElementById('current-subject-display').innerText = currentSubject;
+            document.getElementById('current-total-q-display').innerText = `Jumlah: ${totalQuestions} Soalan`;
+            document.getElementById('setup-subject').value = currentSubject;
+            setQuestionsCount(totalQuestions);
+        }
+
+        // Tangkap Gambar dari video stream langsung ke Canvas
+        function processOMR() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvasOutput');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = 480;
+            canvas.height = 640;
+            
+            // Lukis video ke kanvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Simpan snapshot
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                rawImageElement = tempImg;
+                showCanvasWithImage(tempImg);
+            };
+            tempImg.src = canvas.toDataURL('image/png');
         }
 
         // LOGIK UTAMA SEMAKAN JAWAPAN & KIRA MARKAH MASA NYATA
@@ -819,9 +810,12 @@
 
                     for (let dy = -rad; dy <= rad; dy++) {
                         for (let dx = -rad; dx <= rad; dx++) {
-                            // Jarak bulatan
+                            // Jarak bulatan & Pemeriksaan had tatasusunan yang selamat
                             if (dx*dx + dy*dy <= rad*rad) {
-                                const pixelIndex = Math.round((targetY + dy) * canvas.width + (targetX + dx)) * 4;
+                                const px = Math.min(canvas.width - 1, Math.max(0, Math.round(targetX + dx)));
+                                const py = Math.min(canvas.height - 1, Math.max(0, Math.round(targetY + dy)));
+                                const pixelIndex = (py * canvas.width + px) * 4;
+                                
                                 if (pixelIndex >= 0 && pixelIndex < data.length) {
                                     const r = data[pixelIndex];
                                     const g = data[pixelIndex + 1];
