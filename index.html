@@ -186,6 +186,54 @@
                 </button>
             </div>
 
+            <!-- PANEL PELARASAN GRID JAWAPAN (NUDGE BUTTONS) -->
+            <div id="alignment-panel" class="hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-4 animate-in fade-in duration-200">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
+                        <i data-lucide="sliders" class="w-4 h-4"></i> Pembetulan Kedudukan Grid Bulatan
+                    </h3>
+                    <span class="text-[9px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-bold">Laras Jitu</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <!-- Gerakan Posisi Grid -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400">GERAKKAN GRID</span>
+                        <div class="grid grid-cols-3 gap-1.5 w-28">
+                            <div></div>
+                            <button onclick="nudgeGrid('y', -3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-up" class="w-4 h-4 text-slate-600"></i></button>
+                            <div></div>
+                            
+                            <button onclick="nudgeGrid('x', -3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i></button>
+                            <div class="flex items-center justify-center"><i data-lucide="move" class="w-4 h-4 text-brand-500"></i></div>
+                            <button onclick="nudgeGrid('x', 3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i></button>
+                            
+                            <div></div>
+                            <button onclick="nudgeGrid('y', 3)" class="bg-white hover:bg-slate-100 active:scale-95 border border-slate-200 p-2 rounded-lg flex justify-center shadow-sm"><i data-lucide="chevron-down" class="w-4 h-4 text-slate-600"></i></button>
+                            <div></div>
+                        </div>
+                    </div>
+
+                    <!-- Perenggangan / Saiz Baris & Lajur -->
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-center gap-2 text-center">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Perenggangan Grid</span>
+                        
+                        <!-- Jarak Baris -->
+                        <div class="flex gap-1.5 justify-center">
+                            <button onclick="nudgeGrid('spacingY', 1)" class="bg-white border border-slate-200 px-2 py-1.5 rounded-lg text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-1 shadow-sm"><i data-lucide="stretch-vertical" class="w-3.5 h-3.5 text-brand-500"></i> +Baris</button>
+                            <button onclick="nudgeGrid('spacingY', -1)" class="bg-white border border-slate-200 px-2 py-1.5 rounded-lg text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-1 shadow-sm"><i data-lucide="shrink" class="w-3.5 h-3.5 text-rose-500"></i> -Baris</button>
+                        </div>
+                        
+                        <!-- Jarak Lajur -->
+                        <div class="flex gap-1.5 justify-center">
+                            <button onclick="nudgeGrid('spacingX', 0.5)" class="bg-white border border-slate-200 px-2 py-1.5 rounded-lg text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-1 shadow-sm"><i data-lucide="stretch-horizontal" class="w-3.5 h-3.5 text-brand-500"></i> +Lajur</button>
+                            <button onclick="nudgeGrid('spacingX', -0.5)" class="bg-white border border-slate-200 px-2 py-1.5 rounded-lg text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-1 shadow-sm"><i data-lucide="shrink" class="w-3.5 h-3.5 text-rose-500"></i> -Lajur</button>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-400 italic text-center">Ketuk butang pelaras di atas untuk menyelaraskan bulatan biru/merah tepat ke atas kertas jawapan. Markah akan dikira semula secara automatik!</p>
+            </div>
+
             <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
             <div id="quick-result" class="hidden bg-white p-5 rounded-2xl border border-slate-100 shadow-xl flex flex-col gap-4 animate-in fade-in duration-300">
                 <div class="flex items-center justify-between">
@@ -334,12 +382,13 @@
         let cameraActive = false;
 
         // Data Penentukuran OMR Asal (Sebagai nilai fallback pintar jika auto-detect gagal)
+        // Nilai lalai diletakkan di koordinat tengah borang jawapan secara seimbang
         let calibration = {
-            x: 160,
-            y: 160,
-            spacingX: 35,
+            x: 105,
+            y: 155,
+            spacingX: 30,
             spacingY: 21,
-            col2X: 340,
+            col2X: 275,
             radius: 6,
             threshold: 115
         };
@@ -449,7 +498,7 @@
                 console.error("Kamera gagal diakses:", err);
                 cameraActive = false;
                 
-                // Aktifkan fallback interaktif ke mod fail
+                // Nyahaktifkan paparan kamera
                 video.classList.add('hidden');
                 cameraFallback.classList.remove('hidden');
                 
@@ -497,8 +546,9 @@
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
             const loader = document.getElementById('scanning-loader');
+            const alignPanel = document.getElementById('alignment-panel');
 
-            // Papar loading screen pengesanan automatik selama 1 saat untuk pemprosesan OpenCV
+            // Papar loading screen pengesanan automatik
             loader.classList.remove('hidden');
 
             setTimeout(() => {
@@ -506,6 +556,7 @@
                 video.classList.add('hidden');
                 canvas.classList.remove('hidden');
                 frameGuide.classList.add('hidden');
+                alignPanel.classList.remove('hidden'); // Papar butang pelaras mikro
                 
                 // Urus butang tindakan
                 scanBtn.classList.add('hidden');
@@ -531,11 +582,13 @@
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
             const quickResult = document.getElementById('quick-result');
+            const alignPanel = document.getElementById('alignment-panel');
 
             canvas.classList.add('hidden');
             video.classList.remove('hidden');
             frameGuide.classList.remove('hidden');
             quickResult.classList.add('hidden');
+            alignPanel.classList.add('hidden');
 
             scanBtn.classList.remove('hidden');
             resetBtn.classList.add('hidden');
@@ -569,6 +622,31 @@
                     stream.getTracks().forEach(track => track.stop());
                 }
             }
+        }
+
+        // FUNGSI BUTANG PELARASAN MIKRO (NUDGING) - SANGAT TEPAT & MUDAH
+        function nudgeGrid(key, amount) {
+            if (!rawImageElement) return;
+
+            if (key === 'spacingX') {
+                // Perubahan jarak lajur meluaskan lajur kanan secara berkadar
+                calibration.spacingX = Math.max(10, calibration.spacingX + amount);
+                calibration.col2X += (amount * 3);
+            } else if (key === 'spacingY') {
+                calibration.spacingY = Math.max(5, calibration.spacingY + amount);
+            } else {
+                calibration[key] += amount;
+                if (key === 'x') {
+                    // Kedua-dua lajur bergerak seiringan jika dianjat ke kiri/kanan
+                    calibration.col2X += amount;
+                }
+            }
+
+            // Redraw imej dan jalankan analisis jitu semula
+            const canvas = document.getElementById('canvasOutput');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(rawImageElement, 0, 0, canvas.width, canvas.height);
+            analyzeCanvas(canvas);
         }
 
         // Modal Kunci Jawapan & Subjek
@@ -699,7 +777,7 @@
             tempImg.src = canvas.toDataURL('image/png');
         }
 
-        // ALGORITMA PENJAJARAN AUTOPILOT OMR (AUTO-ALIGNMENT GRID DENGAN GUARED FALLBACK)
+        // ALGORITMA PENJAJARAN AUTOPILOT OMR (DIPERBAIK - LEBIH KETAT & TEPAT)
         function autoAlignAndProcess(canvas) {
             try {
                 // Pastikan modul cv sedia dan boleh diakses
@@ -727,8 +805,9 @@
                     let rect = cv.boundingRect(cnt);
                     let ratio = rect.width / rect.height;
                     
-                    // Bulatan jawapan UPSR biasanya bersaiz 11-26px pada kanvas 480x640
-                    if (rect.width >= 11 && rect.width <= 26 && rect.height >= 11 && rect.height <= 26 && ratio >= 0.75 && ratio <= 1.35) {
+                    // Mengetatkan syarat penapisan saiz bulatan OMR (UPSR bersaiz ~12px hingga ~25px)
+                    // Mengelakkan pengesanan objek rawak di luar kotak jawapan
+                    if (rect.width >= 12 && rect.width <= 24 && rect.height >= 12 && rect.height <= 24 && ratio >= 0.8 && ratio <= 1.25) {
                         detectedBubbles.push({
                             x: rect.x + rect.width / 2,
                             y: rect.y + rect.height / 2,
@@ -738,7 +817,7 @@
                     }
                 }
 
-                console.log(`Ditemui ${detectedBubbles.length} bulatan calon.`);
+                console.log(`Ditemui ${detectedBubbles.length} bulatan calon yang sah.`);
 
                 // 4. Analisis Kelompok Bulatan (Clustering) untuk Penjajaran Jitu secara Autopilot
                 if (detectedBubbles.length >= 10) {
@@ -751,31 +830,30 @@
                     let leftColBubbles = detectedBubbles.filter(b => b.x < medianX);
                     let rightColBubbles = detectedBubbles.filter(b => b.x >= medianX);
 
+                    // Memastikan kita hanya mengambil bulatan yang sejajar (lajur kiri minimum 5)
                     if (leftColBubbles.length >= 5) {
-                        // Kira had atas (min Y) dan had bawah (max Y) bulatan jawapan di lajur kiri
                         leftColBubbles.sort((a, b) => a.y - b.y);
                         let minY = leftColBubbles[0].y;
                         let maxY = leftColBubbles[leftColBubbles.length - 1].y;
 
-                        // Cari julat X lajur kiri untuk menentukan permulaan A, B, C, D
                         leftColBubbles.sort((a, b) => a.x - b.x);
                         let minX = leftColBubbles[0].x;
                         let maxX = leftColBubbles[leftColBubbles.length - 1].x;
 
-                        // AUTO-UPDATE DATA PENENTUKURAN (Dinamik mengikut gambar!)
-                        calibration.x = Math.max(15, minX - 4);
-                        calibration.y = Math.max(100, minY - 2);
+                        // PENGATURAN SEMULA DINAMIK (Mengunci grid tepat ke sasaran)
+                        calibration.x = Math.max(25, minX - 4);
+                        calibration.y = Math.max(120, minY - 2);
                         
-                        // Kira jarak lajur (spacingX) secara automatik
+                        // Jarak lajur (spacingX) standard baharu
                         let calculatedSpacingX = (maxX - minX) / 3;
-                        if (calculatedSpacingX >= 20 && calculatedSpacingX <= 45) {
+                        if (calculatedSpacingX >= 22 && calculatedSpacingX <= 40) {
                             calibration.spacingX = calculatedSpacingX;
                         }
 
-                        // Kira jarak baris (spacingY) secara automatik untuk 20 baris soalan
+                        // Jarak baris (spacingY) standard baharu
                         let totalRows = (totalQuestions > 20) ? 20 : totalQuestions;
                         let calculatedSpacingY = (maxY - minY) / (totalRows - 1 || 1);
-                        if (calculatedSpacingY >= 14 && calculatedSpacingY <= 35) {
+                        if (calculatedSpacingY >= 16 && calculatedSpacingY <= 32) {
                             calibration.spacingY = calculatedSpacingY;
                         }
 
@@ -784,16 +862,15 @@
                             rightColBubbles.sort((a, b) => a.x - b.x);
                             calibration.col2X = rightColBubbles[0].x - 4;
                         } else {
-                            // Jika tiada lajur kedua dikesan, setkan jarak lajur kanan standard
                             calibration.col2X = calibration.x + (calibration.spacingX * 4) + 60;
                         }
-                        console.log("Auto-Alignment Berjaya Dipasang!", calibration);
+                        console.log("Auto-Alignment Berjaya!", calibration);
                     }
                 } else {
                     useDefaultCalibration();
                 }
 
-                // Sapu memori OpenCV untuk elak kebocoran memori (memory leaks)
+                // Sapu memori OpenCV
                 src.delete();
                 gray.delete();
                 thresh.delete();
@@ -801,7 +878,7 @@
                 hierarchy.delete();
 
             } catch (err) {
-                console.warn("Ralat OpenCV atau fail tidak ditemui. Melakukan sandaran standard dinamik:", err);
+                console.warn("Ralat OpenCV. Melakukan sandaran standard dinamik:", err);
                 useDefaultCalibration();
             }
 
@@ -809,13 +886,13 @@
             analyzeCanvas(canvas);
         }
 
-        // Tetapkan semula koordinat grid standard terbaik
+        // Tetapkan semula koordinat grid standard terbaik jika auto-align lari
         function useDefaultCalibration() {
-            calibration.x = 85;
+            calibration.x = 105;
             calibration.col2X = 275;
-            calibration.y = 160;
-            calibration.spacingX = 32;
-            calibration.spacingY = 21.5;
+            calibration.y = 155;
+            calibration.spacingX = 30;
+            calibration.spacingY = 21;
         }
 
         // LOGIK UTAMA SEMAKAN JAWAPAN & KIRA MARKAH MASA NYATA
