@@ -43,6 +43,10 @@
             background: #cbd5e1;
             border-radius: 3px;
         }
+        /* Kursor dragging untuk kanvas kalibrasi */
+        #canvasOutput {
+            cursor: move;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans transition-colors duration-200">
@@ -121,7 +125,7 @@
                 <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
                 
                 <!-- Kanvas Interaktif untuk Paparan Preview & Kalibrasi -->
-                <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10"></canvas>
+                <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10" title="Sentuh dan seret untuk gerakkan bulatan imbasan"></canvas>
                 
                 <!-- Prerender / Fallback Visual apabila Kamera Tidak Berfungsi -->
                 <div id="camera-fallback" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-10">
@@ -172,6 +176,53 @@
                 <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
                     <i data-lucide="upload" class="w-4 h-4 text-brand-500"></i> MUAT NAIK JAWAPAN / AMBIL GAMBAR
                 </button>
+            </div>
+
+            <!-- PANEL PEMBETULAN GRID SECARA SENTUH ATAU BUTANG (SANGAT MUDAH & TEPAT) -->
+            <div id="quick-alignment-panel" class="hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
+                        <i data-lucide="move" class="w-4 h-4"></i> Pelarasan Grid Bulatan (Sentuh & Seret Gambar)
+                    </h3>
+                    <span class="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">100% Aktif</span>
+                </div>
+                
+                <p class="text-[10px] text-slate-500">Sentuh gambar dan seret ke mana-mana arah untuk menggerakkan bulatan imbasan. Guna butang di bawah untuk pelarasan mikro:</p>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <!-- Gerak Grid -->
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400">POSISI GRID</span>
+                        <div class="grid grid-cols-3 gap-1 w-24">
+                            <div></div>
+                            <button onclick="nudge('y', -3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-up" class="w-3.5 h-3.5 text-slate-600"></i></button>
+                            <div></div>
+                            
+                            <button onclick="nudge('x', -3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-left" class="w-3.5 h-3.5 text-slate-600"></i></button>
+                            <div class="flex items-center justify-center"><i data-lucide="move" class="w-3.5 h-3.5 text-brand-500"></i></div>
+                            <button onclick="nudge('x', 3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-600"></i></button>
+                            
+                            <div></div>
+                            <button onclick="nudge('y', 3)" class="bg-white hover:bg-slate-100 border border-slate-200 p-1.5 rounded flex justify-center"><i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-600"></i></button>
+                            <div></div>
+                        </div>
+                    </div>
+
+                    <!-- Jarak Baris & Lajur -->
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col justify-between gap-2">
+                        <div class="flex flex-col gap-1 text-center">
+                            <span class="text-[10px] font-bold text-slate-400">UBAH JARAK</span>
+                            <div class="flex gap-1 justify-center mt-1">
+                                <button onclick="nudge('spacingY', 1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="stretch-vertical" class="w-3 h-3 text-brand-500"></i> +Baris</button>
+                                <button onclick="nudge('spacingY', -1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="shrink" class="w-3 h-3 text-rose-500"></i> -Baris</button>
+                            </div>
+                            <div class="flex gap-1 justify-center mt-1">
+                                <button onclick="nudge('spacingX', 1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="stretch-horizontal" class="w-3 h-3 text-brand-500"></i> +Lajur</button>
+                                <button onclick="nudge('spacingX', -1)" class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] hover:bg-slate-100 font-bold text-slate-600 flex items-center gap-0.5"><i data-lucide="shrink" class="w-3 h-3 text-rose-500"></i> -Lajur</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
@@ -319,15 +370,24 @@
         let cameraActive = false;
 
         // Data Penentukuran OMR Standard (Kekal konsisten di dalam logik)
+        // Nilai X asal ditukar dari 60 ke 160 supaya kedudukan permulaan lebih rapat ke tengah borang
         let calibration = {
-            x: 60,
+            x: 160,
             y: 160,
             spacingX: 35,
             spacingY: 21,
-            col2X: 260,
+            col2X: 340, // Lajur kedua disesuaikan agar selari dengan X baharu
             radius: 6,
             threshold: 110
         };
+
+        // Pembolehubah untuk fungsi drag pergerakan jari
+        let isDragging = false;
+        let startTouchX = 0;
+        let startTouchY = 0;
+        let originalCalX = 0;
+        let originalCalY = 0;
+        let originalCol2X = 0;
 
         // Simpan salinan imej asal pada kanvas untuk dilukis semula jika perlu
         let rawImageElement = null;
@@ -347,6 +407,7 @@
             loadSavedConfig();
             renderSkemaGrid();
             loadRecords();
+            initDragEvents();
             lucide.createIcons();
             
             // Simulasikan pemuatan OpenCV (Memandangkan OpenCV.js adalah fail yang besar,
@@ -433,7 +494,7 @@
                 // Sediakan mesej mesra pengguna menerusi banner aplikasi
                 showCustomError(
                     "Akses Kamera Disekat", 
-                    "Kebenaran untuk accessing kamera telah dinafikan atau disekat oleh peranti. Anda boleh membenarkannya semula di bahagian tetapan pelayar anda (biasanya pada ikon mangga atau butang set semula kebenaran di bar alamat URL pelayar). <strong>Anda masih boleh menyemak kertas secara offline dengan menekan butang 'MUAT NAIK JAWAPAN' di bawah!</strong>"
+                    "Kebenaran untuk mengakses kamera telah dinafikan atau disekat oleh peranti. Anda boleh membenarkannya semula di bahagian tetapan pelayar anda (biasanya pada ikon mangga atau kesengetan URL). <strong>Anda masih boleh menyemak kertas secara offline dengan menekan butang 'MUAT NAIK JAWAPAN' di bawah!</strong>"
                 );
                 lucide.createIcons();
             }
@@ -468,11 +529,13 @@
             const frameGuide = document.getElementById('camera-frame-guide');
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
+            const alignmentPanel = document.getElementById('quick-alignment-panel');
 
             // Hentikan video, paparkan kanvas
             video.classList.add('hidden');
             canvas.classList.remove('hidden');
             frameGuide.classList.add('hidden');
+            alignmentPanel.classList.remove('hidden'); // Paparkan kawalan butang nudging
             
             // Urus urutan butang
             scanBtn.classList.add('hidden');
@@ -485,7 +548,7 @@
             // Lukis gambar ke kanvas
             ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
             
-            // Analisis serta-merta tanpa panel slider manual
+            // Analisis serta-merta
             analyzeCanvas(canvas);
         }
 
@@ -497,11 +560,13 @@
             const scanBtn = document.getElementById('scanBtn');
             const resetBtn = document.getElementById('resetBtn');
             const quickResult = document.getElementById('quick-result');
+            const alignmentPanel = document.getElementById('quick-alignment-panel');
 
             canvas.classList.add('hidden');
             video.classList.remove('hidden');
             frameGuide.classList.remove('hidden');
             quickResult.classList.add('hidden');
+            alignmentPanel.classList.add('hidden');
 
             scanBtn.classList.remove('hidden');
             resetBtn.classList.add('hidden');
@@ -535,6 +600,92 @@
                     stream.getTracks().forEach(track => track.stop());
                 }
             }
+        }
+
+        // SISTEM DRAGGING JARI ATAS KANVAS (MENGGERAKKAN GRID JAWAPAN)
+        function initDragEvents() {
+            const canvas = document.getElementById('canvasOutput');
+            
+            // Event Mouse (Desktop)
+            canvas.addEventListener('mousedown', startDrag);
+            canvas.addEventListener('mousemove', moveDrag);
+            canvas.addEventListener('mouseup', endDrag);
+            canvas.addEventListener('mouseleave', endDrag);
+
+            // Event Touch (Mobile)
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    startDrag(e.touches[0]);
+                }
+            }, { passive: true });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    moveDrag(e.touches[0]);
+                }
+            }, { passive: true });
+            
+            canvas.addEventListener('touchend', endDrag);
+        }
+
+        function startDrag(e) {
+            if (!rawImageElement) return;
+            isDragging = true;
+            
+            // Dapatkan koordinat touch/mouse nisbah kepada elemen canvas
+            const rect = document.getElementById('canvasOutput').getBoundingClientRect();
+            startTouchX = e.clientX - rect.left;
+            startTouchY = e.clientY - rect.top;
+            
+            originalCalX = calibration.x;
+            originalCalY = calibration.y;
+            originalCol2X = calibration.col2X;
+        }
+
+        function moveDrag(e) {
+            if (!isDragging || !rawImageElement) return;
+            
+            const rect = document.getElementById('canvasOutput').getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            // Kira beza seretan
+            const dx = (currentX - startTouchX) * (480 / rect.width); // Skala koordinat ke 480x640
+            const dy = (currentY - startTouchY) * (640 / rect.height);
+            
+            // Ubah koordinat imbasan secara terus
+            calibration.x = Math.round(originalCalX + dx);
+            calibration.y = Math.round(originalCalY + dy);
+            calibration.col2X = Math.round(originalCol2X + dx);
+            
+            // Lukis semula imej dan selaraskan grid bulatan imbasan
+            showCanvasWithImage(rawImageElement);
+        }
+
+        function endDrag() {
+            isDragging = false;
+        }
+
+        // FUNGSI MENGGERAKKAN GRID MENERUSI BUTANG HALUS (NUDGE)
+        function nudge(key, amount) {
+            if (!rawImageElement) return;
+            
+            if (key === 'col2X') {
+                calibration.col2X += amount;
+            } else if (key === 'spacingX') {
+                calibration.spacingX = Math.max(10, calibration.spacingX + amount);
+                calibration.col2X += (amount * 3); // Laras kol2 mengikut perenggangan
+            } else if (key === 'spacingY') {
+                calibration.spacingY = Math.max(5, calibration.spacingY + amount);
+            } else {
+                calibration[key] += amount;
+                if (key === 'x') {
+                    calibration.col2X += amount; // Kedua-dua lajur bergerak seiringan
+                }
+            }
+            
+            // Lakarkan semula imej dengan perubahan jitu
+            showCanvasWithImage(rawImageElement);
         }
 
         // Modal Kunci Jawapan & Subjek
