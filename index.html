@@ -115,10 +115,13 @@
                 </button>
             </div>
 
-            <!-- Kamera Box Container -->
+            <!-- Kamera & Paparan Preview Box Container -->
             <div class="relative bg-black rounded-2xl overflow-hidden shadow-inner aspect-[3/4] flex items-center justify-center">
                 <!-- Video Stream -->
                 <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+                
+                <!-- Kanvas Interaktif untuk Paparan Preview & Kalibrasi -->
+                <canvas id="canvasOutput" class="hidden w-full h-full object-contain bg-slate-900 z-10"></canvas>
                 
                 <!-- Prerender / Fallback Visual apabila Kamera Tidak Berfungsi -->
                 <div id="camera-fallback" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center gap-4 text-white z-10">
@@ -127,7 +130,7 @@
                     </div>
                     <div>
                         <p class="font-bold text-sm">Mod Fail Sandaran Aktif</p>
-                        <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Kamera disekat atau tiada. Sila gunakan fungsi muat naik gambar di bawah untuk menyemak kertas jawapan secara offline.</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-[280px]">Sila muat naik gambar borang jawapan atau ambil gambar menggunakan kamera telefon untuk memulakan kalibrasi jitu.</p>
                     </div>
                 </div>
 
@@ -148,17 +151,19 @@
                         <div class="w-4 h-4 border-b-2 border-r-2 border-brand-500"></div>
                     </div>
                 </div>
-
-                <!-- Canvas Tersembunyi Untuk Pemprosesan -->
-                <canvas id="canvasOutput" class="hidden"></canvas>
             </div>
 
-            <!-- Kawalan Pengimbasan -->
+            <!-- Bahagian Kawalan Pengimbasan -->
             <div class="flex flex-col gap-3">
-                <!-- Butang Imbas melalui Kamera -->
-                <button id="scanBtn" onclick="processOMR()" disabled class="w-full bg-slate-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]">
-                    <i data-lucide="scan-face" class="w-5 h-5"></i> MEMULAKAN KAMERA...
-                </button>
+                <!-- Butang Ambil Gambar / Reset Semula -->
+                <div class="flex gap-2">
+                    <button id="scanBtn" onclick="processOMR()" disabled class="flex-1 bg-slate-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98]">
+                        <i data-lucide="scan-face" class="w-5 h-5"></i> MEMULAKAN KAMERA...
+                    </button>
+                    <button id="resetBtn" onclick="resetToLiveCamera()" class="hidden bg-slate-600 hover:bg-slate-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> SIFAR
+                    </button>
+                </div>
 
                 <!-- Input File Tersembunyi -->
                 <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
@@ -167,8 +172,73 @@
                 <button onclick="triggerFileUpload()" class="w-full bg-white text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm hover:bg-slate-50 active:scale-[0.98]">
                     <i data-lucide="upload" class="w-4 h-4 text-brand-500"></i> MUAT NAIK JAWAPAN / AMBIL GAMBAR
                 </button>
+            </div>
 
-                <p class="text-center text-xs text-slate-400">Pastikan pencahayaan cukup terang untuk ketepatan yang tinggi.</p>
+            <!-- PANEL KALIBRASI DINAIFKAN (Sangat Penting untuk Membetulkan Koordinat) -->
+            <div id="calibration-panel" class="hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-md flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 text-brand-500">
+                        <i data-lucide="sliders" class="w-4 h-4"></i> Selaraskan Bulatan Imbasan (Kalibrasi)
+                    </h3>
+                    <span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-semibold">Tuning</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                    <!-- Kiri Kanan -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Sisi Kiri/Kanan (X)</span>
+                            <span id="val-x" class="font-bold text-brand-500">60</span>
+                        </div>
+                        <input id="range-x" type="range" min="10" max="200" value="60" oninput="updateCalibrationValue('x', this.value)" class="w-full accent-brand-500">
+                    </div>
+
+                    <!-- Atas Bawah -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Tinggi Atas/Bawah (Y)</span>
+                            <span id="val-y" class="font-bold text-brand-500">160</span>
+                        </div>
+                        <input id="range-y" type="range" min="50" max="300" value="160" oninput="updateCalibrationValue('y', this.value)" class="w-full accent-brand-500">
+                    </div>
+
+                    <!-- Jarak Pilihan -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Jarak Lajur A-B-C-D</span>
+                            <span id="val-spacing-x" class="font-bold text-brand-500">35</span>
+                        </div>
+                        <input id="range-spacing-x" type="range" min="15" max="60" value="35" oninput="updateCalibrationValue('spacingX', this.value)" class="w-full accent-brand-500">
+                    </div>
+
+                    <!-- Jarak Baris -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Jarak Baris Soalan</span>
+                            <span id="val-spacing-y" class="font-bold text-brand-500">21</span>
+                        </div>
+                        <input id="range-spacing-y" type="range" min="10" max="40" value="21" oninput="updateCalibrationValue('spacingY', this.value)" class="w-full accent-brand-500">
+                    </div>
+
+                    <!-- Jarak Lajur 2 (Bagi soalan 21-40) -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Kedudukan Lajur Kedua</span>
+                            <span id="val-col2-x" class="font-bold text-brand-500">260</span>
+                        </div>
+                        <input id="range-col2-x" type="range" min="150" max="400" value="260" oninput="updateCalibrationValue('col2X', this.value)" class="w-full accent-brand-500">
+                    </div>
+
+                    <!-- Sensitiviti Grayscale -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Kepekaan Pensel (Gelap)</span>
+                            <span id="val-threshold" class="font-bold text-brand-500">110</span>
+                        </div>
+                        <input id="range-threshold" type="range" min="50" max="200" value="110" oninput="updateCalibrationValue('threshold', this.value)" class="w-full accent-brand-500">
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-400 italic">Sila laraskan slider supaya bulatan merah yang dipaparkan pada gambar berada betul-betul di tengah-tengah bulatan jawapan.</p>
             </div>
 
             <!-- Kad Keputusan Semakan Terkini (Pop-up Semasa Imbas) -->
@@ -315,6 +385,20 @@
         let lastScannedResult = null;
         let cameraActive = false;
 
+        // Data Penentukuran OMR Default (Sangat Fleksibel)
+        let calibration = {
+            x: 60,
+            y: 160,
+            spacingX: 35,
+            spacingY: 21,
+            col2X: 260,
+            radius: 6,
+            threshold: 110
+        };
+
+        // Simpan salinan imej asal pada kanvas untuk dilukis semula semasa kalibrasi dilaraskan
+        let rawImageElement = null;
+
         // Inisialisasi Kunci Jawapan Default
         function initializeDefaultSkema() {
             activeSkema = [];
@@ -436,21 +520,65 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    const canvas = document.getElementById('canvasOutput');
-                    const ctx = canvas.getContext('2d');
-                    
-                    canvas.width = 480;
-                    canvas.height = 640;
-                    
-                    // Lukis imej tersebut ke kanvas mengikut saiz standard
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // Laksanakan analisis imej kanvas
-                    analyzeCanvas(canvas);
+                    rawImageElement = img; // Simpan rujukan imej asal
+                    showCanvasWithImage(img);
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
+        }
+
+        // Fungsi melukis imej ke kanvas dan menukar mod ke pembetulan kalibrasi
+        function showCanvasWithImage(imageSource) {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvasOutput');
+            const frameGuide = document.getElementById('camera-frame-guide');
+            const scanBtn = document.getElementById('scanBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const calPanel = document.getElementById('calibration-panel');
+
+            // Hentikan video, paparkan kanvas
+            video.classList.add('hidden');
+            canvas.classList.remove('hidden');
+            frameGuide.classList.add('hidden');
+            calPanel.classList.remove('hidden');
+            
+            // Urus urutan butang
+            scanBtn.classList.add('hidden');
+            resetBtn.classList.remove('hidden');
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = 480;
+            canvas.height = 640;
+            
+            // Lukis gambar ke kanvas
+            ctx.drawImage(imageSource, 0, 0, canvas.width, canvas.height);
+            
+            // Analisis serta-merta
+            analyzeCanvas(canvas);
+        }
+
+        // Reset semula ke kamera langsung (Live view)
+        function resetToLiveCamera() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvasOutput');
+            const frameGuide = document.getElementById('camera-frame-guide');
+            const scanBtn = document.getElementById('scanBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const calPanel = document.getElementById('calibration-panel');
+            const quickResult = document.getElementById('quick-result');
+
+            canvas.classList.add('hidden');
+            video.classList.remove('hidden');
+            frameGuide.classList.remove('hidden');
+            calPanel.classList.add('hidden');
+            quickResult.classList.add('hidden');
+
+            scanBtn.classList.remove('hidden');
+            resetBtn.classList.add('hidden');
+            
+            rawImageElement = null;
+            startCamera();
         }
 
         // Logik Penukaran Tab Navigasi
@@ -477,6 +605,25 @@
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
+            }
+        }
+
+        // Mengemas kini nilai kalibrasi daripada range sliders secara interaktif
+        function updateCalibrationValue(key, value) {
+            calibration[key] = parseInt(value);
+            
+            // Kemas kini label teks pada skrin
+            let labelId = 'val-' + key;
+            if (key === 'spacingX') labelId = 'val-spacing-x';
+            if (key === 'spacingY') labelId = 'val-spacing-y';
+            if (key === 'col2X') labelId = 'val-col2-x';
+            
+            const labelEl = document.getElementById(labelId);
+            if (labelEl) labelEl.innerText = value;
+
+            // Jika imej asal wujud, proses semula grid di atas imej tersebut secara terus
+            if (rawImageElement) {
+                showCanvasWithImage(rawImageElement);
             }
         }
 
@@ -565,6 +712,11 @@
             document.getElementById('current-total-q-display').innerText = `Jumlah: ${totalQuestions} Soalan`;
             
             toggleSetupModal();
+            
+            // Proses semula jika fail/snapshot aktif
+            if (rawImageElement) {
+                showCanvasWithImage(rawImageElement);
+            }
         }
 
         function loadSavedConfig() {
@@ -582,7 +734,7 @@
             setQuestionsCount(totalQuestions);
         }
 
-        // Tangkap Gambar dari kamera ke Canvas untuk diproses
+        // Tangkap Gambar dari video stream langsung ke Canvas
         function processOMR() {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvasOutput');
@@ -593,76 +745,100 @@
             
             // Lukis video ke kanvas
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            analyzeCanvas(canvas);
+            
+            // Simpan snapshot sebagai rujukan kalibrasi
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                rawImageElement = tempImg;
+                showCanvasWithImage(tempImg);
+            };
+            tempImg.src = canvas.toDataURL('image/png');
         }
 
-        // LOGIK UTAMA PEMPROSESAN GAMBAR KANVAS (PROSESSING JAWAPAN)
+        // LOGIK UTAMA PEMPROSESAN GAMBAR KANVAS (PROSESSING JAWAPAN DENGAN PREVIEW VISUAL)
         function analyzeCanvas(canvas) {
             const ctx = canvas.getContext('2d');
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imgData.data;
 
-            // Penentuan kedudukan grid jawapan
-            // Menyediakan dua lajur untuk 40 soalan (Lajur 1: 1-20, Lajur 2: 21-40)
             let betul = 0;
             let salah = 0;
             let rincianSalah = [];
             let rincianJawapanCalon = [];
 
-            // Memproses setiap soalan secara iteratif berdasarkan koordinat grid nisbah
+            // Memproses setiap soalan secara iteratif berdasarkan konfigurasi kalibrasi semasa
             for (let i = 0; i < totalQuestions; i++) {
                 const isLajur2 = i >= 20;
                 const rowIdx = isLajur2 ? i - 20 : i;
 
-                // Hitung anggaran koordinat X/Y pada kanvas
-                const colStartX = isLajur2 ? 260 : 60; 
-                const rowY = 160 + (rowIdx * 21); // Jarak baris yang konsisten
+                // Hitung koordinat X/Y pada kanvas berasaskan kawalan slider kalibrasi
+                const colStartX = isLajur2 ? calibration.col2X : calibration.x; 
+                const rowY = calibration.y + (rowIdx * calibration.spacingY);
 
                 let maxKepekatan = -1;
                 let jawapanDipilih = "A";
+                let selectedIndex = 0;
 
                 const pilihanAbjad = ["A", "B", "C", "D"];
+                let kepekatanList = [];
 
                 // Semak kepekatan piksel gelap dalam bulatan A, B, C, D
                 pilihanAbjad.forEach((abc, idx) => {
-                    const targetX = colStartX + (idx * 35);
+                    const targetX = colStartX + (idx * calibration.spacingX);
                     const targetY = rowY;
 
-                    // Mengira kepekatan kegelapan dalam kawasan 10x10 piksel
+                    // Mengira kepekatan kegelapan dalam kawasan bersaiz mengikut radius
                     let totalDarkness = 0;
-                    for (let dy = -5; dy < 5; dy++) {
-                        for (let dx = -5; dx < 5; dx++) {
-                            const pixelIndex = ((targetY + dy) * canvas.width + (targetX + dx)) * 4;
-                            if (pixelIndex >= 0 && pixelIndex < data.length) {
-                                const r = data[pixelIndex];
-                                const g = data[pixelIndex + 1];
-                                const b = data[pixelIndex + 2];
-                                // Nilai Grayscale
-                                const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
-                                // Menilai kepekatan jika piksel tersebut gelap
-                                if (grayscale < 110) { 
-                                    totalDarkness++;
+                    let totalPixels = 0;
+                    const rad = calibration.radius;
+
+                    for (let dy = -rad; dy <= rad; dy++) {
+                        for (let dx = -rad; dx <= rad; dx++) {
+                            // Jarak bulatan
+                            if (dx*dx + dy*dy <= rad*rad) {
+                                const pixelIndex = ((targetY + dy) * canvas.width + (targetX + dx)) * 4;
+                                if (pixelIndex >= 0 && pixelIndex < data.length) {
+                                    const r = data[pixelIndex];
+                                    const g = data[pixelIndex + 1];
+                                    const b = data[pixelIndex + 2];
+                                    
+                                    // Nilai Grayscale
+                                    const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
+                                    
+                                    // Menilai kepekatan jika piksel tersebut gelap
+                                    if (grayscale < calibration.threshold) { 
+                                        totalDarkness++;
+                                    }
+                                    totalPixels++;
                                 }
                             }
                         }
                     }
 
-                    if (totalDarkness > maxKepekatan) {
-                        maxKepekatan = totalDarkness;
+                    const densityRatio = totalDarkness / (totalPixels || 1);
+                    kepekatanList.push(densityRatio);
+
+                    if (densityRatio > maxKepekatan) {
+                        maxKepekatan = densityRatio;
                         jawapanDipilih = abc;
+                        selectedIndex = idx;
                     }
                 });
 
-                // Jika kepekatan terlalu rendah, calon dikira tidak menjawab
-                if (maxKepekatan < 8) {
+                // Jika tiada bulatan yang cukup gelap, bermaksud calon tidak tanda (TIADA)
+                // Nisbah minimum kepekatan hitam dilaraskan ke 15% kawasan imbasan
+                if (maxKepekatan < 0.15) {
                     jawapanDipilih = "TIADA";
+                    selectedIndex = -1;
                 }
 
                 rincianJawapanCalon.push(jawapanDipilih);
 
                 // Perbandingan dengan kunci jawapan
                 const betulA = activeSkema[i];
-                if (jawapanDipilih === betulA) {
+                const adakahBetul = (jawapanDipilih === betulA);
+                
+                if (adakahBetul) {
                     betul++;
                 } else {
                     salah++;
@@ -672,6 +848,34 @@
                         pilihan: jawapanDipilih
                     });
                 }
+
+                // LUKIS BULATAN PREVIEW PADA KANVAS (Untuk bantuan visual guru)
+                pilihanAbjad.forEach((abc, idx) => {
+                    const targetX = colStartX + (idx * calibration.spacingX);
+                    const targetY = rowY;
+                    
+                    ctx.beginPath();
+                    ctx.arc(targetX, targetY, calibration.radius + 2, 0, 2 * Math.PI);
+                    
+                    if (idx === selectedIndex) {
+                        // Bulatan yang dikesan dipilih oleh calon
+                        if (adakahBetul) {
+                            ctx.strokeStyle = '#10b981'; // Hijau jika betul
+                            ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                        } else {
+                            ctx.strokeStyle = '#ef4444'; // Merah jika salah
+                            ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+                        }
+                    } else {
+                        // Bulatan bukan pilihan
+                        ctx.strokeStyle = '#3b82f6'; // Biru lembut sebagai penunjuk
+                        ctx.fillStyle = 'transparent';
+                    }
+                    
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.fill();
+                });
             }
 
             // Simpan Keputusan Sementara
@@ -719,10 +923,6 @@
 
             // Tampilkan kad keputusan dengan animasi yang kemas
             document.getElementById('quick-result').classList.remove('hidden');
-            document.getElementById('student-name').value = ''; // Reset input nama
-            
-            // Scroll ke kad keputusan
-            document.getElementById('quick-result').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Simpan Hasil Ke Pangkalan Data Lokal
@@ -749,6 +949,9 @@
             document.getElementById('quick-result').classList.add('hidden');
             loadRecords();
             switchTab('history');
+            
+            // Auto reset untuk imbasan seterusnya
+            resetToLiveCamera();
         }
 
         function loadRecords() {
