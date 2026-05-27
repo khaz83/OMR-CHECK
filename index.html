@@ -317,7 +317,10 @@
         <p>&copy; 2026 Semak OMR Pro. Berfungsi sepenuhnya secara luar talian (offline).</p>
     </footer>
 
-    <!-- Muatkan OpenCV.js secara Dinamik & Pengurusan Logik Aplikasi -->
+    <!-- Panggilan Fail OpenCV Utama Berserta Fallback Sekiranya Ralat Luar Talian -->
+    <script async src="opencv.js" id="opencv-js" onerror="onOpenCvError()"></script>
+
+    <!-- Pengurusan Logik Aplikasi -->
     <script>
         // Rangka Kerja Pendaftaran & Keadaan Global
         let opencvReady = false;
@@ -361,12 +364,25 @@
             loadRecords();
             lucide.createIcons();
             
-            // Simulasikan pemuatan OpenCV (Memandangkan OpenCV.js adalah fail yang besar,
-            // kita sediakan fallback pintar sekiranya fail lambat dimuat naik oleh pengguna)
+            // Simulasikan pemuatan OpenCV secara selamat
             setTimeout(() => {
                 onOpenCvReady();
             }, 1800);
         };
+
+        // Fallback jika opencv.js luar talian tempatan gagal dimuatkan
+        function onOpenCvError() {
+            console.log("Gagal memuatkan opencv.js tempatan. Mencari CDN...");
+            let script = document.createElement('script');
+            script.src = "https://docs.opencv.org/4.x/opencv.js";
+            script.async = true;
+            script.onload = onOpenCvReady;
+            script.onerror = () => {
+                console.log("Fail OpenCV gagal dimuatkan sepenuhnya. Mod sandaran piksel diaktifkan.");
+                onOpenCvReady();
+            };
+            document.body.appendChild(script);
+        }
 
         function onOpenCvReady() {
             opencvReady = true;
@@ -683,112 +699,123 @@
             tempImg.src = canvas.toDataURL('image/png');
         }
 
-        // ALGORITMA PENJAJARAN AUTOPILOT OMR (AUTO-ALIGNMENT GRID)
+        // ALGORITMA PENJAJARAN AUTOPILOT OMR (AUTO-ALIGNMENT GRID DENGAN GUARED FALLBACK)
         function autoAlignAndProcess(canvas) {
-            // Kita gunakan OpenCV.js untuk binarize gambar, mengesan semua kontur berbentuk bulatan (bubbles),
-            // dan mengira sendiri bounding box serta spacing grid secara automatik!
-            let src = cv.imread(canvas);
-            let gray = new cv.Mat();
-            let thresh = new cv.Mat();
-            let contours = new cv.MatVector();
-            let hierarchy = new cv.Mat();
-
-            // 1. Tukar ke Grayscale
-            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-            // 2. Adaptive Thresholding (mengesan bintik bintik hitam bulatan pensel)
-            cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 15, 4);
-
-            // 3. Cari Kontur
-            cv.findContours(thresh, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
-
-            let detectedBubbles = [];
-            for (let i = 0; i < contours.size(); ++i) {
-                let cnt = contours.get(i);
-                let rect = cv.boundingRect(cnt);
-                let ratio = rect.width / rect.height;
-                
-                // Bulatan jawapan UPSR biasanya bersaiz 12-30px pada kanvas 480x640
-                if (rect.width >= 11 && rect.width <= 26 && rect.height >= 11 && rect.height <= 26 && ratio >= 0.75 && ratio <= 1.35) {
-                    detectedBubbles.push({
-                        x: rect.x + rect.width / 2,
-                        y: rect.y + rect.height / 2,
-                        w: rect.width,
-                        h: rect.height
-                    });
+            try {
+                // Pastikan modul cv sedia dan boleh diakses
+                if (typeof cv === 'undefined' || !cv.Mat) {
+                    throw new Error("Modul OpenCV.js tidak dikesan atau belum sedia.");
                 }
-            }
 
-            console.log(`Ditemui ${detectedBubbles.length} bulatan calon.`);
+                let src = cv.imread(canvas);
+                let gray = new cv.Mat();
+                let thresh = new cv.Mat();
+                let contours = new cv.MatVector();
+                let hierarchy = new cv.Mat();
 
-            // 4. Analisis Kelompok Bulatan (Clustering) untuk Penjajaran Jitu secara Autopilot
-            if (detectedBubbles.length >= 10) {
-                // Cari titik tengah (median) paksi X untuk memisahkan Lajur Kiri & Lajur Kanan
-                detectedBubbles.sort((a, b) => a.x - b.x);
-                let midIdx = Math.floor(detectedBubbles.length / 2);
-                let medianX = detectedBubbles[midIdx].x;
+                // 1. Tukar ke Grayscale
+                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+                // 2. Adaptive Thresholding (mengesan bintik bintik hitam bulatan pensel)
+                cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 15, 4);
 
-                // Pisahkan mengikut lajur
-                let leftColBubbles = detectedBubbles.filter(b => b.x < medianX);
-                let rightColBubbles = detectedBubbles.filter(b => b.x >= medianX);
+                // 3. Cari Kontur
+                cv.findContours(thresh, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
-                if (leftColBubbles.length >= 5) {
-                    // Kira had atas (min Y) dan had bawah (max Y) bulatan jawapan di lajur kiri
-                    leftColBubbles.sort((a, b) => a.y - b.y);
-                    let minY = leftColBubbles[0].y;
-                    let maxY = leftColBubbles[leftColBubbles.length - 1].y;
-
-                    // Cari julat X lajur kiri untuk menentukan permulaan A, B, C, D
-                    leftColBubbles.sort((a, b) => a.x - b.x);
-                    let minX = leftColBubbles[0].x;
-                    let maxX = leftColBubbles[leftColBubbles.length - 1].x;
-
-                    // AUTO-UPDATE DATA PENENTUKURAN (Dinamik mengikut gambar!)
-                    calibration.x = Math.max(15, minX - 4);
-                    calibration.y = Math.max(100, minY - 2);
+                let detectedBubbles = [];
+                for (let i = 0; i < contours.size(); ++i) {
+                    let cnt = contours.get(i);
+                    let rect = cv.boundingRect(cnt);
+                    let ratio = rect.width / rect.height;
                     
-                    // Kira jarak lajur (spacingX) secara automatik
-                    let calculatedSpacingX = (maxX - minX) / 3;
-                    if (calculatedSpacingX >= 20 && calculatedSpacingX <= 45) {
-                        calibration.spacingX = calculatedSpacingX;
+                    // Bulatan jawapan UPSR biasanya bersaiz 11-26px pada kanvas 480x640
+                    if (rect.width >= 11 && rect.width <= 26 && rect.height >= 11 && rect.height <= 26 && ratio >= 0.75 && ratio <= 1.35) {
+                        detectedBubbles.push({
+                            x: rect.x + rect.width / 2,
+                            y: rect.y + rect.height / 2,
+                            w: rect.width,
+                            h: rect.height
+                        });
                     }
-
-                    // Kira jarak baris (spacingY) secara automatik untuk 20 baris soalan
-                    let totalRows = (totalQuestions > 20) ? 20 : totalQuestions;
-                    let calculatedSpacingY = (maxY - minY) / (totalRows - 1 || 1);
-                    if (calculatedSpacingY >= 14 && calculatedSpacingY <= 35) {
-                        calibration.spacingY = calculatedSpacingY;
-                    }
-
-                    // Jika lajur kedua wujud (bagi soalan 21-40)
-                    if (rightColBubbles.length >= 5 && totalQuestions > 20) {
-                        rightColBubbles.sort((a, b) => a.x - b.x);
-                        calibration.col2X = rightColBubbles[0].x - 4;
-                    } else {
-                        // Jika tiada lajur kedua dikesan, setkan jarak lajur kanan standard
-                        calibration.col2X = calibration.x + (calibration.spacingX * 4) + 60;
-                    }
-                    console.log("Auto-Alignment Berjaya Dipasang!", calibration);
                 }
-            } else {
-                console.log("Gagal mengesan bulatan yang mencukupi untuk auto-align. Menggunakan grid lalai.");
-                // Jika fail OMR diambil terlalu senget atau rosak, sistem fallback pintar kami
-                // akan meletakkan grid OMR di bahagian tengah secara automatik mengikut saiz imej.
-                calibration.x = 85;
-                calibration.col2X = 275;
-                calibration.y = 160;
-                calibration.spacingX = 32;
-                calibration.spacingY = 21.5;
+
+                console.log(`Ditemui ${detectedBubbles.length} bulatan calon.`);
+
+                // 4. Analisis Kelompok Bulatan (Clustering) untuk Penjajaran Jitu secara Autopilot
+                if (detectedBubbles.length >= 10) {
+                    // Cari titik tengah (median) paksi X untuk memisahkan Lajur Kiri & Lajur Kanan
+                    detectedBubbles.sort((a, b) => a.x - b.x);
+                    let midIdx = Math.floor(detectedBubbles.length / 2);
+                    let medianX = detectedBubbles[midIdx].x;
+
+                    // Pisahkan mengikut lajur
+                    let leftColBubbles = detectedBubbles.filter(b => b.x < medianX);
+                    let rightColBubbles = detectedBubbles.filter(b => b.x >= medianX);
+
+                    if (leftColBubbles.length >= 5) {
+                        // Kira had atas (min Y) dan had bawah (max Y) bulatan jawapan di lajur kiri
+                        leftColBubbles.sort((a, b) => a.y - b.y);
+                        let minY = leftColBubbles[0].y;
+                        let maxY = leftColBubbles[leftColBubbles.length - 1].y;
+
+                        // Cari julat X lajur kiri untuk menentukan permulaan A, B, C, D
+                        leftColBubbles.sort((a, b) => a.x - b.x);
+                        let minX = leftColBubbles[0].x;
+                        let maxX = leftColBubbles[leftColBubbles.length - 1].x;
+
+                        // AUTO-UPDATE DATA PENENTUKURAN (Dinamik mengikut gambar!)
+                        calibration.x = Math.max(15, minX - 4);
+                        calibration.y = Math.max(100, minY - 2);
+                        
+                        // Kira jarak lajur (spacingX) secara automatik
+                        let calculatedSpacingX = (maxX - minX) / 3;
+                        if (calculatedSpacingX >= 20 && calculatedSpacingX <= 45) {
+                            calibration.spacingX = calculatedSpacingX;
+                        }
+
+                        // Kira jarak baris (spacingY) secara automatik untuk 20 baris soalan
+                        let totalRows = (totalQuestions > 20) ? 20 : totalQuestions;
+                        let calculatedSpacingY = (maxY - minY) / (totalRows - 1 || 1);
+                        if (calculatedSpacingY >= 14 && calculatedSpacingY <= 35) {
+                            calibration.spacingY = calculatedSpacingY;
+                        }
+
+                        // Jika lajur kedua wujud (bagi soalan 21-40)
+                        if (rightColBubbles.length >= 5 && totalQuestions > 20) {
+                            rightColBubbles.sort((a, b) => a.x - b.x);
+                            calibration.col2X = rightColBubbles[0].x - 4;
+                        } else {
+                            // Jika tiada lajur kedua dikesan, setkan jarak lajur kanan standard
+                            calibration.col2X = calibration.x + (calibration.spacingX * 4) + 60;
+                        }
+                        console.log("Auto-Alignment Berjaya Dipasang!", calibration);
+                    }
+                } else {
+                    useDefaultCalibration();
+                }
+
+                // Sapu memori OpenCV untuk elak kebocoran memori (memory leaks)
+                src.delete();
+                gray.delete();
+                thresh.delete();
+                contours.delete();
+                hierarchy.delete();
+
+            } catch (err) {
+                console.warn("Ralat OpenCV atau fail tidak ditemui. Melakukan sandaran standard dinamik:", err);
+                useDefaultCalibration();
             }
 
-            // Sapu memori OpenCV untuk elak kebocoran memori (memory leaks)
-            src.delete();
-            gray.delete();
-            thresh.delete();
-            contours.delete();
-            hierarchy.delete();
-
-            // 5. Jalankan analisis imbasan dengan parameter dinamik baharu yang sangat tepat!
+            // Jalankan analisis imbasan dengan parameter dinamik baharu yang sangat tepat!
             analyzeCanvas(canvas);
+        }
+
+        // Tetapkan semula koordinat grid standard terbaik
+        function useDefaultCalibration() {
+            calibration.x = 85;
+            calibration.col2X = 275;
+            calibration.y = 160;
+            calibration.spacingX = 32;
+            calibration.spacingY = 21.5;
         }
 
         // LOGIK UTAMA SEMAKAN JAWAPAN & KIRA MARKAH MASA NYATA
