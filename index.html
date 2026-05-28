@@ -253,7 +253,7 @@
   .bg-slate-800 { background-color: var(--color-slate-800); }
   .bg-slate-900 { background-color: var(--color-slate-900); }
   .bg-white { background-color: var(--color-white); }
-  .bg-white\/20 { background-color: color-mix(in oklab, var(--white) 20%, transparent); }
+  .bg-white\/20 { background-color: color-mix(in oklab, var(--color-white) 20%, transparent); }
   .bg-gradient-to-r {
     --tw-gradient-position: to right in oklab;
     background-image: linear-gradient(var(--tw-gradient-stops));
@@ -499,7 +499,7 @@
                 <i data-lucide="video" class="w-3.5 h-3.5 text-blue-500"></i> Live Kamera
               </button>
               <button onclick="triggerAutomaticScan()"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-1 rounded-xl text-center text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95">
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-1 rounded-xl text-center text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 animate-pulse">
                 <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i> IMBAS SEKARANG
               </button>
             </div>
@@ -514,56 +514,113 @@
             </h4>
             <button onclick="resetGridSliders()" class="text-[10px] text-blue-600 hover:underline">Sifar Semula</button>
           </div>
-          <p class="text-[10px] text-slate-500 leading-relaxed">
-            Sila gerakkan gelangsar di bawah supaya bulatan biru digital selari dengan bulatan OMR di dalam kertas jawapan.
-          </p>
           
-          <div class="flex flex-col gap-2.5 text-[11px] text-slate-600">
-            <!-- X-Offset Slider -->
-            <div class="flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Kedudukan X (Kiri-Kanan)</span>
-                <span id="val-x" class="font-mono font-bold text-blue-600">50%</span>
-              </div>
-              <input type="range" id="slide-x" min="5" max="95" value="50" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+          <!-- BUTANG IMBAS & JAJAJAR SECARA AUTOMATIK (VISI KOMPUTER TEMPATAN) -->
+          <div class="grid grid-cols-1 gap-2 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100/70">
+            <button onclick="autoAlignGrid()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition-all">
+              <i data-lucide="target" class="w-4 h-4 text-amber-300 animate-spin" style="animation-duration: 3s;"></i>
+              AUTO-JAJAJARAN (IMBAS SAUH PENJURU)
+            </button>
+            <p class="text-[9px] text-blue-700 text-center leading-normal">
+              Sistem akan mengimbas 4 kotak hitam di penjuru kertas untuk menyelaraskan bulatan digital secara automatik!
+            </p>
+          </div>
+
+          <!-- PAD KAWALAN MIKRO (D-PAD) - GANTIAN KEPADA SLIDERS YANG SUSAH -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-150 flex flex-col gap-2.5">
+            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+              <i data-lucide="move" class="w-3.5 h-3.5"></i> Pad Kawalan Mikro (Klik untuk Keselarasan Jitu)
+            </span>
+            <div class="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+              <div></div>
+              <button onclick="adjustGridMicro('up')" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 p-1.5 rounded-lg flex justify-center items-center shadow-sm" title="Gerak Grid ke Atas">
+                <i data-lucide="chevron-up" class="w-4 h-4"></i>
+              </button>
+              <div></div>
+
+              <button onclick="adjustGridMicro('left')" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 p-1.5 rounded-lg flex justify-center items-center shadow-sm" title="Gerak Grid ke Kiri">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <div class="text-[9px] font-bold text-slate-400 text-center flex items-center justify-center">Gerak</div>
+              <button onclick="adjustGridMicro('right')" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 p-1.5 rounded-lg flex justify-center items-center shadow-sm" title="Gerak Grid ke Kanan">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+
+              <div></div>
+              <button onclick="adjustGridMicro('down')" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 p-1.5 rounded-lg flex justify-center items-center shadow-sm" title="Gerak Grid ke Bawah">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              </button>
+              <div></div>
             </div>
 
-            <!-- Y-Offset Slider -->
-            <div class="flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Kedudukan Y (Atas-Bawah)</span>
-                <span id="val-y" class="font-mono font-bold text-blue-600">50%</span>
+            <div class="grid grid-cols-2 gap-2 border-t border-slate-200 pt-2.5 mt-1">
+              <div class="flex flex-col gap-1">
+                <span class="text-[9px] font-bold text-slate-400 text-center">Lebar Kolom (A-D)</span>
+                <div class="flex gap-1 justify-center">
+                  <button onclick="adjustGridSize('width', -1)" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded shadow-sm text-xs font-bold">-</button>
+                  <button onclick="adjustGridSize('width', 1)" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded shadow-sm text-xs font-bold">+</button>
+                </div>
               </div>
-              <input type="range" id="slide-y" min="5" max="95" value="48" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
-            </div>
-
-            <!-- Grid Width Slider -->
-            <div class="flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Lebar Kolom (A - D)</span>
-                <span id="val-w" class="font-mono font-bold text-blue-600">40%</span>
+              <div class="flex flex-col gap-1">
+                <span class="text-[9px] font-bold text-slate-400 text-center">Tinggi Baris (1-10)</span>
+                <div class="flex gap-1 justify-center">
+                  <button onclick="adjustGridSize('height', -1)" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded shadow-sm text-xs font-bold">-</button>
+                  <button onclick="adjustGridSize('height', 1)" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded shadow-sm text-xs font-bold">+</button>
+                </div>
               </div>
-              <input type="range" id="slide-w" min="10" max="90" value="40" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
-            </div>
-
-            <!-- Grid Height Slider -->
-            <div class="flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Tinggi Baris (1 - Akhir)</span>
-                <span id="val-h" class="font-mono font-bold text-blue-600">65%</span>
-              </div>
-              <input type="range" id="slide-h" min="10" max="90" value="65" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
-            </div>
-
-            <!-- Sensor Threshold Slider -->
-            <div class="flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Kepekaan Pengesan (Gelap)</span>
-                <span id="val-threshold" class="font-mono font-bold text-emerald-600">85 (Gelap)</span>
-              </div>
-              <input type="range" id="slide-threshold" min="30" max="180" value="85" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer" title="Nilai lebih rendah memerlukan tanda yang lebih hitam">
             </div>
           </div>
+
+          <!-- SLIDERS UTAMA (UNTUK KAWALAN LANJUTAN) -->
+          <details class="text-xs text-slate-600">
+            <summary class="cursor-pointer font-semibold text-slate-500 hover:text-slate-700 outline-none select-none">Kawalan Gelangsar Lanjutan (Advanced)</summary>
+            <div class="flex flex-col gap-2.5 mt-3 pt-3 border-t border-slate-100">
+              <!-- X-Offset Slider -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between">
+                  <span>Kedudukan X (Kiri-Kanan)</span>
+                  <span id="val-x" class="font-mono font-bold text-blue-600">50%</span>
+                </div>
+                <input type="range" id="slide-x" min="5" max="95" value="50" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Y-Offset Slider -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between">
+                  <span>Kedudukan Y (Atas-Bawah)</span>
+                  <span id="val-y" class="font-mono font-bold text-blue-600">50%</span>
+                </div>
+                <input type="range" id="slide-y" min="5" max="95" value="48" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Grid Width Slider -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between">
+                  <span>Lebar Kolom (A - D)</span>
+                  <span id="val-w" class="font-mono font-bold text-blue-600">40%</span>
+                </div>
+                <input type="range" id="slide-w" min="10" max="90" value="40" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Grid Height Slider -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between">
+                  <span>Tinggi Baris (1 - Akhir)</span>
+                  <span id="val-h" class="font-mono font-bold text-blue-600">65%</span>
+                </div>
+                <input type="range" id="slide-h" min="10" max="90" value="65" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Sensor Threshold Slider -->
+              <div class="flex flex-col gap-0.5">
+                <div class="flex justify-between">
+                  <span>Kepekaan Gelap Sensor</span>
+                  <span id="val-threshold" class="font-mono font-bold text-emerald-600">85 (Gelap)</span>
+                </div>
+                <input type="range" id="slide-threshold" min="30" max="180" value="85" oninput="updateGridSettings()" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer" title="Nilai lebih rendah memerlukan tanda yang lebih hitam">
+              </div>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -901,6 +958,31 @@ function resetGridSliders() {
   drawGridOverlay();
 }
 
+// ===================== PENGAWAL MIKRO D-PAD DAN GERAKAN GRID =====================
+function adjustGridMicro(direction) {
+  const step = 1; // 1% pergerakan setiap klik
+  if (direction === 'up') gridSettings.y = Math.max(5, gridSettings.y - step);
+  if (direction === 'down') gridSettings.y = Math.min(95, gridSettings.y + step);
+  if (direction === 'left') gridSettings.x = Math.max(5, gridSettings.x - step);
+  if (direction === 'right') gridSettings.x = Math.min(95, gridSettings.x + step);
+
+  resetGridSlidersUI();
+  drawGridOverlay();
+}
+
+function adjustGridSize(dimension, change) {
+  const step = 1; // 1% ubah saiz setiap klik
+  if (dimension === 'width') {
+    gridSettings.width = Math.max(10, Math.min(90, gridSettings.width + change));
+  }
+  if (dimension === 'height') {
+    gridSettings.height = Math.max(10, Math.min(90, gridSettings.height + change));
+  }
+
+  resetGridSlidersUI();
+  drawGridOverlay();
+}
+
 // ===================== KAWALAN DIALOG NOTIFIKASI =====================
 function showNotification(title, message, type = 'success') {
   const modal = document.getElementById('notification-modal');
@@ -998,7 +1080,7 @@ function handleFileUpload(event) {
       
       currentImageObject = img;
       drawGridOverlay();
-      showNotification('Imej Bersedia', 'Gunakan Gelangsar Grid untuk menyelaraskan bintik digital dengan bintik kertas pelajar.', 'info');
+      showNotification('Imej Bersedia', 'Gunakan Pad Kawalan Mikro atau butang Auto-Jajajar untuk menyelaraskan bintik sensor.', 'info');
     }
     img.src = e.target.result;
   }
@@ -1033,7 +1115,7 @@ function generateDemoOMR() {
   ctx.font = "14px ui-sans-serif, system-ui";
   ctx.fillText("Subjek: Simulasi Latihan Pengesanan Pintar", 300, 90);
 
-  // Bina beberapa garisan hitam sempadan borang (marker anchors)
+  // KOTAK SAUH HITAM PENJURU (MARKER ANCHORS) - Sangat penting untuk auto-align!
   ctx.fillStyle = "#000000";
   ctx.fillRect(40, 40, 25, 25);
   ctx.fillRect(535, 40, 25, 25);
@@ -1050,7 +1132,7 @@ function generateDemoOMR() {
     const rand = Math.random();
     if (rand < 0.15) {
       simulatedStudentAnswers[i] = ""; // Pelajar biarkan kosong
-    } else if (rand < 0.65) {
+    } else if (rand < 0.70) {
       simulatedStudentAnswers[i] = schema[i] || 'A'; // Jawapan betul mengikut skema
     } else {
       // Pelajar pilih salah satu jawapan rawak lain
@@ -1127,25 +1209,96 @@ function generateDemoOMR() {
   showNotification('OMR Contoh Dicipta', 'Kertas jawapan simulasi berjaya dilukis. Anda boleh tekan IMBAS SEKARANG langsung!', 'success');
 }
 
-// ===================== KAWALAN GRID OVERLAY (LUKISAN) =====================
-function updateGridSettings() {
-  gridSettings.x = parseInt(document.getElementById('slide-x').value);
-  gridSettings.y = parseInt(document.getElementById('slide-y').value);
-  gridSettings.width = parseInt(document.getElementById('slide-w').value);
-  gridSettings.height = parseInt(document.getElementById('slide-h').value);
-  gridSettings.threshold = parseInt(document.getElementById('slide-threshold').value);
+// ===================== ALGORITMA PENJAJARAN AUTOMATIK (AUTO-ALIGN) =====================
+function autoAlignGrid() {
+  if (!currentImageObject) {
+    showNotification('Gagal', 'Sila muat naik imej atau jana kertas contoh dahulu.', 'error');
+    return;
+  }
 
-  updateSliderLabels();
-  drawGridOverlay();
+  const canvas = document.getElementById('canvasOutput');
+  const ctx = canvas.getContext('2d');
+  
+  // Tangkap data piksel bersih dari imej rujukan semasa
+  canvas.width = 600;
+  canvas.height = 800;
+  ctx.drawImage(currentImageObject, 0, 0, 600, 800);
+  
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imgData.data;
+
+  // Imbas 4 penjuru imej untuk mencari kedudukan kotak sauh hitam
+  // Cari di zon: Top-Left (TL), Top-Right (TR), Bottom-Left (BL), Bottom-Right (BR)
+  let tl = findDarkestAnchor(pixels, canvas.width, canvas.height, 20, 150, 20, 150);
+  let tr = findDarkestAnchor(pixels, canvas.width, canvas.height, 450, 580, 20, 150);
+  let bl = findDarkestAnchor(pixels, canvas.width, canvas.height, 20, 150, 650, 780);
+  let br = findDarkestAnchor(pixels, canvas.width, canvas.height, 450, 580, 650, 780);
+
+  if (tl && tr && bl && br) {
+    // Laraskan letak peratusan grid digital secara matematik supaya melingkari bulatan jawapan di dalam sauh
+    const xPercent = (tl.x / canvas.width) * 100 + 3.0; 
+    const yPercent = (tl.y / canvas.height) * 100 + 4.0; 
+    const wPercent = ((tr.x - tl.x) / canvas.width) * 100 - 6.0;
+    const hPercent = ((bl.y - tl.y) / canvas.height) * 100 - 8.0;
+
+    gridSettings.x = Math.round(xPercent);
+    gridSettings.y = Math.round(yPercent);
+    gridSettings.width = Math.round(wPercent);
+    gridSettings.height = Math.round(hPercent);
+
+    resetGridSlidersUI();
+    drawGridOverlay();
+    showNotification('Selesai Jajar!', 'Grid dikesan dan diselaraskan secara automatik ke kertas OMR dengan tepat!', 'success');
+  } else {
+    showNotification('Jajaran Gagal', 'Kotak hitam penjuru tidak jelas. Sila laraskan sedikit menggunakan butang kawalan mikro.', 'error');
+  }
 }
 
+// Mencari pusat bagi kotak hitam paling pekat di zon yang ditentukan
+function findDarkestAnchor(pixels, w, h, minX, maxX, minY, maxY) {
+  let darkestX = 0;
+  let darkestY = 0;
+  let minBrightness = Infinity;
+
+  // Lompat setiap 4 piksel untuk pengiraan ultra-laju
+  for (let y = minY; y < maxY; y += 4) {
+    for (let x = minX; x < maxX; x += 4) {
+      let sum = 0;
+      let count = 0;
+
+      // Ambil purata kecerahan di kawasan 12x12 piksel
+      for (let dy = -6; dy <= 6; dy += 2) {
+        for (let dx = -6; dx <= 6; dx += 2) {
+          let px = x + dx;
+          let py = y + dy;
+          if (px >= 0 && px < w && py >= 0 && py < h) {
+            let idx = (py * w + px) * 4;
+            // Purata Grayscale mutlak
+            sum += (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+            count++;
+          }
+        }
+      }
+
+      let avg = sum / count;
+      if (avg < minBrightness) {
+        minBrightness = avg;
+        darkestX = x;
+        darkestY = y;
+      }
+    }
+  }
+  // Hanya kembalikan jika dikesan cukup gelap (kurang daripada treshold 110)
+  return minBrightness < 110 ? { x: darkestX, y: darkestY } : null;
+}
+
+// ===================== KAWALAN GRID OVERLAY (LUKISAN) =====================
 function drawGridOverlay() {
   const overlayCanvas = document.getElementById('canvasOverlay');
   const video = document.getElementById('video');
   const canvasOutput = document.getElementById('canvasOutput');
   const ctx = overlayCanvas.getContext('2d');
 
-  // Selaraskan saiz canvas overlay dengan dimensi semasa kanvas output
   overlayCanvas.width = 600;
   overlayCanvas.height = 800;
 
@@ -1163,16 +1316,15 @@ function drawGridOverlay() {
   const stepX = totalW / 3;
   const stepY = totalQ > 1 ? totalH / (totalQ - 1) : totalH;
 
-  // Lukis penunjuk sempadan kawasan imbasan
+  // Lukis sempadan zon pengesanan
   ctx.strokeStyle = "rgba(59, 130, 246, 0.4)";
   ctx.lineWidth = 1;
   ctx.strokeRect(startX - 40, startY - 20, totalW + 80, totalH + 40);
 
-  // Lukis semua titik sensor digital di atas OMR
+  // Lukis bulatan sensor biru
   for (let r = 0; r < totalQ; r++) {
     const cy = startY + (r * stepY);
     
-    // Lukis garisan panduan baris
     ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
     ctx.beginPath();
     ctx.moveTo(startX - 20, cy);
@@ -1182,14 +1334,12 @@ function drawGridOverlay() {
     for (let c = 0; c < 4; c++) {
       const cx = startX + (c * stepX);
       
-      // Bulatan kecil penunjuk titik pengesan digital
       ctx.beginPath();
       ctx.arc(cx, cy, 11, 0, 2 * Math.PI);
       ctx.strokeStyle = "rgba(59, 130, 246, 0.85)";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Tambah titik tengah
       ctx.fillStyle = "rgba(59, 130, 246, 0.9)";
       ctx.beginPath();
       ctx.arc(cx, cy, 2, 0, 2 * Math.PI);
@@ -1204,13 +1354,11 @@ function triggerAutomaticScan() {
   const ctx = canvas.getContext('2d');
 
   if (isCameraActive && !currentImageObject) {
-    // Tangkap gambar semasa dari aliran video jika video aktif
     const video = document.getElementById('video');
     canvas.width = 600;
     canvas.height = 800;
     ctx.drawImage(video, 0, 0, 600, 800);
     
-    // Hentikan video sementara untuk membekukan imej rujukan
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       isCameraActive = false;
@@ -1228,7 +1376,7 @@ function triggerAutomaticScan() {
     return;
   }
 
-  // Lukis semula imej bersih ke kanvas tanpa sebarang gangguan garisan sebelum pengesanan
+  // Lukis imej bersih rujukan ke kanvas
   canvas.width = 600;
   canvas.height = 800;
   ctx.drawImage(currentImageObject, 0, 0, 600, 800);
@@ -1245,28 +1393,27 @@ function triggerAutomaticScan() {
   const stepX = totalW / 3;
   const stepY = totalQ > 1 ? totalH / (totalQ - 1) : totalH;
 
-  // Dapatkan maklumat piksel imej
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const pixels = imgData.data;
 
   scannedAnswers = {};
 
-  // Analisis setiap soalan baris demi baris
+  // Imbas setiap pilihan jawapan (A, B, C, D)
   for (let r = 0; r < totalQ; r++) {
     const cy = Math.round(startY + (r * stepY));
     
-    let optionsBrightness = []; // Nilai purata kegelapan A, B, C, D
+    let optionsBrightness = [];
 
     for (let c = 0; c < 4; c++) {
       const cx = Math.round(startX + (c * stepX));
       
-      // Hitung kepekatan warna purata dalam liputan sensor bulatan (radius 6px)
       let totalGray = 0;
       let count = 0;
 
+      // Sensor R=6 piksel
       for (let dy = -6; dy <= 6; dy++) {
         for (let dx = -6; dx <= 6; dx++) {
-          if (dx*dx + dy*dy <= 36) { // Formula Bulatan R=6
+          if (dx*dx + dy*dy <= 36) {
             const px = cx + dx;
             const py = cy + dy;
 
@@ -1276,7 +1423,6 @@ function triggerAutomaticScan() {
               const gVal = pixels[offset + 1];
               const bVal = pixels[offset + 2];
               
-              // Formula Grayscale piawai
               const gray = (rVal * 0.299) + (gVal * 0.587) + (bVal * 0.114);
               totalGray += gray;
               count++;
@@ -1289,19 +1435,27 @@ function triggerAutomaticScan() {
       optionsBrightness.push({ letter: ['A', 'B', 'C', 'D'][c], brightness: avgBrightness, x: cx, y: cy });
     }
 
-    // Cari bulatan yang paling gelap (Kecerahan terendah)
+    // --- TEKNOLOGI BARU: RELATIVE CONTRAST DETECTION ---
+    // Susun mengikut kegelapan (paling gelap di tempat pertama)
     optionsBrightness.sort((a, b) => a.brightness - b.brightness);
     const darkest = optionsBrightness[0];
+    
+    // Kira purata kecerahan tiga (3) bulatan pilihan yang tidak ditudung
+    const nonMarkedAvg = (optionsBrightness[1].brightness + optionsBrightness[2].brightness + optionsBrightness[3].brightness) / 3;
+    
+    // Perbezaan kepekatan (Kontras relatif)
+    const relativeContrast = nonMarkedAvg - darkest.brightness;
 
-    // Syarat: Kecerahan mesti di bawah nilai ambang (Threshold) untuk dikira "Shaded"
-    if (darkest.brightness <= gridSettings.threshold) {
+    // Sekiranya perbezaan kontras antara yang tergelap dengan bulatan lain adalah melebihi 25 unit kontras, 
+    // ia adalah tanda hitam yang sah! (Laluan ini kalis pencahayaan berbayang / malap)
+    if (relativeContrast >= 25 && darkest.brightness <= gridSettings.threshold) {
       scannedAnswers[r + 1] = darkest.letter;
     } else {
-      scannedAnswers[r + 1] = ""; // Pelajar biarkan kosong / tidak dihitamkan dengan cukup
+      scannedAnswers[r + 1] = ""; // Tidak ditudung, atau kotoran samar sahaja
     }
   }
 
-  // Lukis penanda lingkaran hijau (betul) & merah (salah) terus pada imej kanvas output
+  // Lukis lingkaran keputusan langsung pada kanvas
   for (let i = 1; i <= totalQ; i++) {
     const marked = scannedAnswers[i];
     const correct = schema[i] || 'A';
@@ -1309,7 +1463,6 @@ function triggerAutomaticScan() {
     const rIndex = i - 1;
     const cy = startY + (rIndex * stepY);
     
-    // Lukis bulatan penunjuk keputusan pada imej jawapan fizikal
     ['A', 'B', 'C', 'D'].forEach((letter, cIndex) => {
       const cx = startX + (cIndex * stepX);
       
@@ -1317,10 +1470,10 @@ function triggerAutomaticScan() {
         ctx.beginPath();
         ctx.arc(cx, cy, 14, 0, 2 * Math.PI);
         if (marked === correct) {
-          ctx.strokeStyle = "#10b981"; // Hijau pekat (Betul)
+          ctx.strokeStyle = "#10b981"; // Betul - Hijau
           ctx.lineWidth = 3;
         } else {
-          ctx.strokeStyle = "#ef4444"; // Merah terang (Salah)
+          ctx.strokeStyle = "#ef4444"; // Salah - Merah
           ctx.lineWidth = 3;
         }
         ctx.stroke();
@@ -1328,10 +1481,9 @@ function triggerAutomaticScan() {
     });
   }
 
-  // Render statistik keputusan semakan serta merta
   calculateAndRenderScores();
   renderScannedDetectionList();
-  showNotification('Selesai Semakan', 'Imej OMR berjaya ditapis dan diimbas secara automatik sepenuhnya!', 'success');
+  showNotification('Selesai Semakan', 'Imbasan berjaya dijalankan dengan ketepatan tinggi!', 'success');
 }
 
 // ===================== PAPAR SENARAI SEMAKAN KEPUTUSAN =====================
@@ -1439,7 +1591,6 @@ function resetCandidateForm() {
   document.getElementById('quick-wrong').innerText = "0";
   document.getElementById('detection-table-view').innerHTML = '<div class="text-center py-6 text-slate-400 text-xs">Sila klik imbas automatik untuk menganalisis imej...</div>';
   
-  // Lukis imej bersih rujukan semula
   if (currentImageObject) {
     const canvas = document.getElementById('canvasOutput');
     const ctx = canvas.getContext('2d');
@@ -1682,7 +1833,6 @@ function toggleSetupModal() {
       document.getElementById('edit-total-questions').value = currentSub.total;
       temporaryAnswers = { ...currentSub.answers };
       
-      // Kemas kini kotak teks jawapan ekspres
       updateQuickAnswersInputFromGrid(currentSub.total);
       updateTotalQuestionsGrid(currentSub.total);
     }
@@ -1726,14 +1876,12 @@ function addNewCustomSubject() {
   showNotification('Subjek Dicipta', 'Sila taip nama subjek baru dan masukkan kunci jawapan.', 'info');
 }
 
-// Mengemaskini bilangan soalan dan melaras had input jawapan ekspres
 function onTotalQuestionsChange(total) {
   const num = parseInt(total);
   updateTotalQuestionsGrid(num);
   updateQuickAnswersInputFromGrid(num);
 }
 
-// Membina rentetan huruf (Contoh: ABCD) berdasarkan data skema semasa untuk diletakkan di kotak input
 function updateQuickAnswersInputFromGrid(total) {
   let textVal = "";
   for (let i = 1; i <= total; i++) {
@@ -1744,22 +1892,18 @@ function updateQuickAnswersInputFromGrid(total) {
   document.getElementById('quick-answers-count').innerText = `${textVal.length} / ${total} Huruf Dimasukkan`;
 }
 
-// Menghubungkan teks yang ditaip oleh pengguna terus ke peta skema grid digital
 function syncTypedAnswersToGrid(textValue) {
   const total = parseInt(document.getElementById('edit-total-questions').value);
-  // Bersihkan input supaya hanya huruf A, B, C, D sahaja diterima
   const cleanedText = textValue.toUpperCase().replace(/[^A-D]/g, '').substring(0, total);
   
-  // Set nilai input yang telah ditapis
   document.getElementById('edit-quick-answers-input').value = cleanedText;
 
-  // Petak nilai baharu mengikut indeks soalan
   for (let i = 1; i <= total; i++) {
     const char = cleanedText[i - 1];
     if (char) {
       temporaryAnswers[i] = char;
     } else {
-      temporaryAnswers[i] = 'A'; // Lalai sekiranya taipan belum cukup
+      temporaryAnswers[i] = 'A';
     }
   }
 
@@ -1767,7 +1911,6 @@ function syncTypedAnswersToGrid(textValue) {
   updateTotalQuestionsGrid(total);
 }
 
-// Membina paparan grid skema di bawah input ekspres
 function updateTotalQuestionsGrid(total) {
   const container = document.getElementById('skema-grid-container');
   container.innerHTML = '';
@@ -1834,7 +1977,7 @@ function saveSetupSubjectChanges() {
     populatePresets();
     updateActiveSubjectUI();
     toggleSetupModal();
-    resetCandidateForm(); // Jana semula lembaran mengikut skema baharu
+    resetCandidateForm();
     showNotification('Pindaan Disimpan', 'Nama subjek dan skema jawapan telah dikemas kini.', 'success');
   }
 }
