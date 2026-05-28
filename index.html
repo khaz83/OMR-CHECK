@@ -739,7 +739,7 @@
       </div>
 
       <div class="border-t border-slate-100 pt-3 flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-700">Atau Cipta Subjek Baru:</span>
+        <span class="text-xs font-bold text-slate-700">Ubah Suai Subjek:</span>
         <button onclick="addNewCustomSubject()" class="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-0.5">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Cipta Baru
         </button>
@@ -749,12 +749,12 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-slate-500 mb-1">Nama Subjek</label>
-          <input type="text" id="edit-subject-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 outline-none">
+          <input type="text" id="edit-subject-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 outline-none font-medium">
         </div>
         <div>
           <label class="block text-xs text-slate-500 mb-1">Bilangan Soalan</label>
-          <select id="edit-total-questions" onchange="updateTotalQuestionsGrid(this.value)"
-            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 outline-none">
+          <select id="edit-total-questions" onchange="onTotalQuestionsChange(this.value)"
+            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 outline-none font-medium">
             <option value="10">10 Soalan</option>
             <option value="20">20 Soalan</option>
             <option value="30">30 Soalan</option>
@@ -764,10 +764,23 @@
         </div>
       </div>
 
-      <!-- Kunci Jawapan Grid -->
+      <!-- INPUT MENAIP JAWAPAN ABCD SECARA PANTAS -->
+      <div class="bg-blue-50 border border-blue-100 rounded-xl p-3.5 flex flex-col gap-2">
+        <label class="block text-xs font-bold text-blue-800 uppercase tracking-wide">
+          <span class="flex items-center gap-1"><i data-lucide="keyboard" class="w-4 h-4"></i> Kunci Jawapan Ekspres</span>
+        </label>
+        <p class="text-[10px] text-blue-700 leading-normal">
+          Sila taip terus huruf jawapan tanpa selang (Contoh: <code class="bg-white px-1 py-0.5 rounded font-bold">ABCDABCDAB</code>). Aplikasi akan memetakan setiap huruf ke soalan masing-masing secara automatik.
+        </p>
+        <input type="text" id="edit-quick-answers-input" oninput="syncTypedAnswersToGrid(this.value)" placeholder="Taip jawapan di sini..."
+          class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm uppercase tracking-widest font-mono font-bold focus:ring-1 focus:ring-blue-400 outline-none text-blue-950">
+        <div id="quick-answers-count" class="text-right text-[10px] font-bold text-blue-600">0 / 10 Huruf Dimasukkan</div>
+      </div>
+
+      <!-- Kunci Jawapan Grid (Boleh klik juga) -->
       <div>
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Skema Jawapan (Sila Klik)</label>
-        <div id="skema-grid-container" class="grid grid-cols-5 gap-2 max-h-52 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-100">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Peta Jawapan Skema</label>
+        <div id="skema-grid-container" class="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-100">
           <!-- Butang pilihan skema dijana secara dinamik -->
         </div>
       </div>
@@ -1655,6 +1668,174 @@ function updateActiveSubjectUI() {
   if (currentSub) {
     document.getElementById('current-subject-display').innerText = currentSub.name;
     document.getElementById('current-total-q-display').innerText = `Jumlah: ${currentSub.total} Soalan`;
+  }
+}
+
+// ===================== LOGIK PENGURUSAN MODAL SKEMA BARU (TAIP JAWAPAN) =====================
+function toggleSetupModal() {
+  const modal = document.getElementById('setup-modal');
+  if (modal.classList.contains('hidden')) {
+    const currentSub = subjects.find(s => s.id === activeSubjectId);
+    if (currentSub) {
+      document.getElementById('subject-selector').value = activeSubjectId;
+      document.getElementById('edit-subject-name').value = currentSub.name;
+      document.getElementById('edit-total-questions').value = currentSub.total;
+      temporaryAnswers = { ...currentSub.answers };
+      
+      // Kemas kini kotak teks jawapan ekspres
+      updateQuickAnswersInputFromGrid(currentSub.total);
+      updateTotalQuestionsGrid(currentSub.total);
+    }
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+
+function loadPresetSubject(subId) {
+  activeSubjectId = subId;
+  const sub = subjects.find(s => s.id === subId);
+  if (sub) {
+    document.getElementById('edit-subject-name').value = sub.name;
+    document.getElementById('edit-total-questions').value = sub.total;
+    temporaryAnswers = { ...sub.answers };
+    
+    updateQuickAnswersInputFromGrid(sub.total);
+    updateTotalQuestionsGrid(sub.total);
+  }
+}
+
+function addNewCustomSubject() {
+  const newId = 'custom-' + Date.now();
+  const newSub = {
+    id: newId,
+    name: 'Subjek Baru Kustom',
+    total: 20,
+    answers: {}
+  };
+  for (let i = 1; i <= 20; i++) {
+    newSub.answers[i] = 'A';
+  }
+  subjects.push(newSub);
+  activeSubjectId = newId;
+  
+  localStorage.setItem('omr_pro_subjects_v2', JSON.stringify(subjects));
+  populatePresets();
+  loadPresetSubject(newId);
+  showNotification('Subjek Dicipta', 'Sila taip nama subjek baru dan masukkan kunci jawapan.', 'info');
+}
+
+// Mengemaskini bilangan soalan dan melaras had input jawapan ekspres
+function onTotalQuestionsChange(total) {
+  const num = parseInt(total);
+  updateTotalQuestionsGrid(num);
+  updateQuickAnswersInputFromGrid(num);
+}
+
+// Membina rentetan huruf (Contoh: ABCD) berdasarkan data skema semasa untuk diletakkan di kotak input
+function updateQuickAnswersInputFromGrid(total) {
+  let textVal = "";
+  for (let i = 1; i <= total; i++) {
+    textVal += (temporaryAnswers[i] || 'A').toUpperCase();
+  }
+  const inputEl = document.getElementById('edit-quick-answers-input');
+  inputEl.value = textVal;
+  document.getElementById('quick-answers-count').innerText = `${textVal.length} / ${total} Huruf Dimasukkan`;
+}
+
+// Menghubungkan teks yang ditaip oleh pengguna terus ke peta skema grid digital
+function syncTypedAnswersToGrid(textValue) {
+  const total = parseInt(document.getElementById('edit-total-questions').value);
+  // Bersihkan input supaya hanya huruf A, B, C, D sahaja diterima
+  const cleanedText = textValue.toUpperCase().replace(/[^A-D]/g, '').substring(0, total);
+  
+  // Set nilai input yang telah ditapis
+  document.getElementById('edit-quick-answers-input').value = cleanedText;
+
+  // Petak nilai baharu mengikut indeks soalan
+  for (let i = 1; i <= total; i++) {
+    const char = cleanedText[i - 1];
+    if (char) {
+      temporaryAnswers[i] = char;
+    } else {
+      temporaryAnswers[i] = 'A'; // Lalai sekiranya taipan belum cukup
+    }
+  }
+
+  document.getElementById('quick-answers-count').innerText = `${cleanedText.length} / ${total} Huruf Dimasukkan`;
+  updateTotalQuestionsGrid(total);
+}
+
+// Membina paparan grid skema di bawah input ekspres
+function updateTotalQuestionsGrid(total) {
+  const container = document.getElementById('skema-grid-container');
+  container.innerHTML = '';
+  const numQuestions = parseInt(total);
+
+  for (let i = 1; i <= numQuestions; i++) {
+    const activeAns = temporaryAnswers[i] || 'A';
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = "bg-white p-2 rounded-lg border border-slate-200 flex flex-col items-center justify-center gap-1 shadow-sm";
+    
+    const label = document.createElement('span');
+    label.className = "text-[9px] font-bold text-slate-400";
+    label.innerText = `S${i}`;
+    
+    const optionsFlex = document.createElement('div');
+    optionsFlex.className = "flex gap-0.5";
+
+    ['A', 'B', 'C', 'D'].forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `w-4 h-4 text-[9px] font-black rounded-full transition-all border ${
+        activeAns === opt 
+          ? 'bg-blue-600 border-blue-600 text-white shadow-sm' 
+          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+      }`;
+      btn.innerText = opt;
+      btn.onclick = () => {
+        temporaryAnswers[i] = opt;
+        updateQuickAnswersInputFromGrid(total);
+        updateTotalQuestionsGrid(total);
+      };
+      optionsFlex.appendChild(btn);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(optionsFlex);
+    container.appendChild(wrapper);
+  }
+}
+
+function saveSetupSubjectChanges() {
+  const nameInput = document.getElementById('edit-subject-name').value.trim();
+  const totalVal = parseInt(document.getElementById('edit-total-questions').value);
+
+  if (!nameInput) {
+    showNotification('Ralat', 'Sila isi nama subjek dengan sah.', 'error');
+    return;
+  }
+
+  const subIndex = subjects.findIndex(s => s.id === activeSubjectId);
+  if (subIndex !== -1) {
+    subjects[subIndex].name = nameInput;
+    subjects[subIndex].total = totalVal;
+    
+    const cleanAnswers = {};
+    for (let i = 1; i <= totalVal; i++) {
+      cleanAnswers[i] = temporaryAnswers[i] || 'A';
+    }
+    subjects[subIndex].answers = cleanAnswers;
+
+    localStorage.setItem('omr_pro_subjects_v2', JSON.stringify(subjects));
+    
+    populatePresets();
+    updateActiveSubjectUI();
+    toggleSetupModal();
+    resetCandidateForm(); // Jana semula lembaran mengikut skema baharu
+    showNotification('Pindaan Disimpan', 'Nama subjek dan skema jawapan telah dikemas kini.', 'success');
   }
 }
 </script>
